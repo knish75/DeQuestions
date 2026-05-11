@@ -2,505 +2,793 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>Deutsch · 32</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Deutsch · 32" />
+  <meta name="theme-color" content="#EFE7D4" />
 
-  <!--
-  ───────────────────────────────────────────────────────────────────────────
-   OPTIONAL: AI-generated sentences (truly endless variety)
-  ───────────────────────────────────────────────────────────────────────────
-   The 77 built-in sentences reshuffle forever, so this app works perfectly
-   without any setup. If you'd ALSO like fresh AI-generated sentences mixed
-   in, get a key at https://console.anthropic.com/ and paste it below.
-  -->
-  <script>
-    window.ANTHROPIC_API_KEY = ""; // ← optional: paste your key between the quotes
-  </script>
-
-  <!-- Fonts -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
   <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
 
-  <!-- React + Babel + Tailwind via CDN -->
-  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
   <script src="https://cdn.tailwindcss.com"></script>
   <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
 
   <style>
-    html, body { margin: 0; padding: 0; background: #EFE7D4; }
-    .serif { font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif; font-optical-sizing: auto; font-variation-settings: "SOFT" 50, "WONK" 0; }
-    @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
-    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-    @keyframes drawLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
-    .rise { animation: riseIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
-    .fadein { animation: fadeIn 0.4s ease-out both; }
-    .drawline { animation: drawLine 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: left center; }
-    .btn-primary { background: #1C1815; color: #EFE7D4; transition: transform 120ms ease, background 160ms ease, letter-spacing 200ms ease; cursor: pointer; border: none; }
-    .btn-primary:hover { background: #B23A2F; letter-spacing: 0.04em; }
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #EFE7D4; -webkit-font-smoothing: antialiased; }
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+    .serif { font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif; font-optical-sizing: auto; }
+
+    @keyframes riseIn   { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+    @keyframes drawLine { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+    @keyframes spin     { to { transform:rotate(360deg); } }
+    @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+    @keyframes slideUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+    .rise     { animation: riseIn   0.48s cubic-bezier(0.2,0.8,0.2,1) both; }
+    .fadein   { animation: fadeIn   0.35s ease-out both; }
+    .drawline { animation: drawLine 0.55s cubic-bezier(0.2,0.8,0.2,1) both; transform-origin: left center; }
+
+    .btn-primary {
+      background: #1C1815; color: #EFE7D4; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px; font-family: 'Manrope', sans-serif;
+      transition: background 160ms ease, letter-spacing 200ms ease, transform 120ms ease;
+    }
+    .btn-primary:hover  { background: #B23A2F; letter-spacing: 0.04em; }
     .btn-primary:active { transform: translateY(1px); }
-    .btn-ghost { transition: color 160ms ease, border-color 160ms ease; cursor: pointer; background: none; border: none; }
-    .btn-ghost:hover { color: #B23A2F; border-color: #B23A2F; }
-    .speaker { transition: transform 200ms ease, color 200ms ease; cursor: pointer; background: none; border: none; padding: 0; }
-    .speaker:hover { transform: scale(1.08); color: #B23A2F; }
-    .speaker:active { transform: scale(0.95); }
-    kbd { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 500; padding: 2px 6px; border: 1px solid rgba(28,24,21,0.25); border-bottom-width: 2px; border-radius: 4px; background: rgba(255,255,255,0.4); color: #1C1815; }
+    .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; letter-spacing: normal; background: #1C1815; }
+
+    .btn-sm {
+      background: none; border: 1px solid rgba(28,24,21,0.2); cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 4px; font-family: 'Manrope', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      transition: border-color 150ms, color 150ms, background 150ms; color: #6B6157;
+    }
+    .btn-sm:hover { border-color: #1C1815; color: #1C1815; background: rgba(255,255,255,0.25); }
+
+    .btn-ghost {
+      background: none; border: none; cursor: pointer; font-family: 'Manrope', sans-serif;
+      transition: color 150ms;
+    }
+    .btn-ghost:hover   { color: #B23A2F !important; }
+    .btn-ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .icon-btn {
+      background: none; border: none; cursor: pointer; padding: 4px;
+      display: inline-flex; align-items: center; transition: transform 180ms, color 180ms;
+    }
+    .icon-btn:hover  { transform: scale(1.12); color: #B23A2F !important; }
+    .icon-btn:active { transform: scale(0.92); }
+
+    .set-tab {
+      background: none; border: none; cursor: pointer; white-space: nowrap;
+      padding: 5px 12px; border-radius: 20px; font-family: 'Manrope', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      transition: background 150ms, color 150ms;
+    }
+    .set-tab.active           { background: #1C1815; color: #EFE7D4; }
+    .set-tab:not(.active)     { color: #6B6157; }
+    .set-tab:not(.active):hover { color: #1C1815; background: rgba(255,255,255,0.3); }
+
+    .progress-bar  { height: 2px; background: rgba(28,24,21,0.1); border-radius: 1px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #B23A2F; border-radius: 1px; transition: width 350ms ease; }
+
+    .generating-dots::after { content: '...'; animation: pulse 1.2s ease-in-out infinite; }
     .num { font-variant-numeric: tabular-nums; }
-    button:focus { outline: none; }
-    button:focus-visible { outline: 2px solid #B23A2F; outline-offset: 3px; }
-    .voice-select { max-width: 260px; border: 1px solid rgba(28,24,21,0.22); border-radius: 999px; background: rgba(255,255,255,0.28); padding: 7px 12px; color: #1C1815; font-size: 12px; }
+
+    kbd {
+      font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 500;
+      padding: 2px 6px; border: 1px solid rgba(28,24,21,0.25); border-bottom-width: 2px;
+      border-radius: 4px; background: rgba(255,255,255,0.4); color: #1C1815;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(28,24,21,0.2); border-radius: 2px; }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(28,24,21,0.52); z-index: 50;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-box {
+      background: #EFE7D4; border-radius: 6px; width: 100%;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+      display: flex; flex-direction: column; max-height: 84vh;
+      animation: slideUp 0.3s cubic-bezier(0.2,0.8,0.2,1) both;
+    }
+    .modal-header {
+      padding: 16px 20px 13px; border-bottom: 1px solid rgba(28,24,21,0.1);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0;
+    }
+    .modal-body   { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .modal-footer { padding: 0 20px 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    .tab-bar { display: flex; border-bottom: 1px solid rgba(28,24,21,0.1); margin-bottom: 14px; }
+    .tab-item {
+      background: none; border: none; cursor: pointer; font-family: 'Manrope', sans-serif;
+      padding: 8px 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #6B6157; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 150ms, border-color 150ms;
+    }
+    .tab-item.active { color: #1C1815; border-bottom-color: #B23A2F; }
+
+    .key-input {
+      width: 100%; padding: 10px 12px; border-radius: 4px;
+      border: 1px solid rgba(28,24,21,0.2); background: rgba(255,255,255,0.6);
+      font-family: 'Menlo','Monaco','Courier New', monospace; font-size: 12px;
+      color: #1C1815; outline: none; transition: border-color 150ms;
+    }
+    .key-input:focus { border-color: #B23A2F; }
+
+    .json-area {
+      width: 100%; padding: 11px; border-radius: 4px; min-height: 180px;
+      border: 1px solid rgba(28,24,21,0.15); background: rgba(255,255,255,0.5);
+      font-family: 'Menlo','Monaco','Courier New', monospace; font-size: 11px; line-height: 1.65;
+      color: #1C1815; resize: none; outline: none;
+    }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; }
+    .divider-line { flex: 1; height: 1px; background: rgba(28,24,21,0.12); }
+    .divider-text { font-size: 11px; color: #6B6157; font-family: 'Manrope', sans-serif; }
   </style>
 </head>
 <body>
-  <div id="root"></div>
+<div id="root"></div>
 
-  <script type="text/babel" data-presets="react">
-    const { useState, useEffect, useRef, useCallback } = React;
+<script type="text/babel" data-presets="react">
+  const { useState, useEffect, useRef, useCallback } = React;
 
-    // ─── Seed pool (77 sentences, A1–B1, casual du) ─────────────────────────
-    const SEED = [
-      { english: "Hello, how are you?", german: "Hallo, wie geht es dir?", focus: "Begrüßung" },
-      { english: "My name is Thomas.", german: "Ich heiße Thomas.", focus: "Vorstellung" },
-      { english: "I am twenty-five years old.", german: "Ich bin fünfundzwanzig Jahre alt.", focus: "Zahlen · sein" },
-      { english: "Where do you live?", german: "Wo wohnst du?", focus: "Fragewort" },
-      { english: "I live in Berlin.", german: "Ich wohne in Berlin.", focus: "Präsens" },
-      { english: "What do you do for a living?", german: "Was machst du beruflich?", focus: "Beruf" },
-      { english: "I am a teacher.", german: "Ich bin Lehrer.", focus: "Beruf · sein" },
-      { english: "Do you have children?", german: "Hast du Kinder?", focus: "haben · Frage" },
-      { english: "I have two brothers and one sister.", german: "Ich habe zwei Brüder und eine Schwester.", focus: "Akkusativ · Familie" },
-      { english: "She speaks three languages.", german: "Sie spricht drei Sprachen.", focus: "Präsens · 3. Person" },
-      { english: "Do you speak English?", german: "Sprichst du Englisch?", focus: "Frage" },
-      { english: "I don't understand.", german: "Ich verstehe nicht.", focus: "Verneinung" },
-      { english: "Can you repeat that, please?", german: "Kannst du das bitte wiederholen?", focus: "Modalverb können" },
-      { english: "What time is it?", german: "Wie spät ist es?", focus: "Uhrzeit" },
-      { english: "It's half past seven.", german: "Es ist halb acht.", focus: "Uhrzeit" },
-      { english: "I'm hungry.", german: "Ich habe Hunger.", focus: "Idiom · haben" },
-      { english: "I'm thirsty.", german: "Ich habe Durst.", focus: "Idiom · haben" },
-      { english: "What would you like to drink?", german: "Was möchtest du trinken?", focus: "möchten" },
-      { english: "I'd like a coffee, please.", german: "Ich hätte gern einen Kaffee, bitte.", focus: "Konjunktiv · Bestellen" },
-      { english: "How much does that cost?", german: "Wie viel kostet das?", focus: "Einkaufen" },
-      { english: "That is too expensive.", german: "Das ist zu teuer.", focus: "Adjektiv" },
-      { english: "Where is the train station?", german: "Wo ist der Bahnhof?", focus: "Wegbeschreibung" },
-      { english: "Go straight ahead.", german: "Geh geradeaus.", focus: "Imperativ" },
-      { english: "Turn left at the corner.", german: "Bieg an der Ecke links ab.", focus: "Trennbares Verb · Imperativ" },
-      { english: "I'm looking for the post office.", german: "Ich suche die Post.", focus: "Akkusativ" },
-      { english: "The weather is beautiful today.", german: "Das Wetter ist heute schön.", focus: "Wetter" },
-      { english: "It's raining.", german: "Es regnet.", focus: "Wetter · es" },
-      { english: "I have to go to work.", german: "Ich muss zur Arbeit gehen.", focus: "Modalverb müssen" },
-      { english: "Can you help me, please?", german: "Kannst du mir bitte helfen?", focus: "Dativ · können" },
-      { english: "I'm waiting for the bus.", german: "Ich warte auf den Bus.", focus: "Präposition · warten auf" },
-      { english: "When does the train leave?", german: "Wann fährt der Zug ab?", focus: "Trennbares Verb · abfahren" },
-      { english: "The train arrives at eight.", german: "Der Zug kommt um acht an.", focus: "Trennbares Verb · ankommen" },
-      { english: "I forgot my keys.", german: "Ich habe meine Schlüssel vergessen.", focus: "Perfekt" },
-      { english: "Did you sleep well?", german: "Hast du gut geschlafen?", focus: "Perfekt · Frage" },
-      { english: "I went to the doctor yesterday.", german: "Ich bin gestern zum Arzt gegangen.", focus: "Perfekt mit sein" },
-      { english: "She bought a new dress.", german: "Sie hat ein neues Kleid gekauft.", focus: "Perfekt · Akkusativ" },
-      { english: "We have already eaten.", german: "Wir haben schon gegessen.", focus: "Perfekt" },
-      { english: "He hasn't come yet.", german: "Er ist noch nicht gekommen.", focus: "Perfekt mit sein · Verneinung" },
-      { english: "I'd like to invite you to dinner.", german: "Ich möchte dich zum Abendessen einladen.", focus: "Modalverb · trennbar" },
-      { english: "Tomorrow I'm going to Munich.", german: "Morgen fahre ich nach München.", focus: "Zukunft · Inversion" },
-      { english: "I'll call you later.", german: "Ich rufe dich später an.", focus: "Trennbares Verb · anrufen" },
-      { english: "What are you doing this weekend?", german: "Was machst du am Wochenende?", focus: "Frage · Zeit" },
-      { english: "I'm meeting friends.", german: "Ich treffe Freunde.", focus: "Präsens" },
-      { english: "I think it's a good idea.", german: "Ich finde, das ist eine gute Idee.", focus: "Meinung" },
-      { english: "I know that he is right.", german: "Ich weiß, dass er recht hat.", focus: "Nebensatz mit dass" },
-      { english: "I'm coming because I have time.", german: "Ich komme, weil ich Zeit habe.", focus: "Nebensatz mit weil" },
-      { english: "When I have time, I read.", german: "Wenn ich Zeit habe, lese ich.", focus: "Nebensatz mit wenn" },
-      { english: "She asked if I would come.", german: "Sie hat gefragt, ob ich kommen würde.", focus: "Indirekte Frage · ob" },
-      { english: "If I had more money, I would travel.", german: "Wenn ich mehr Geld hätte, würde ich reisen.", focus: "Konjunktiv II" },
-      { english: "I would have helped you.", german: "Ich hätte dir geholfen.", focus: "Konjunktiv II Vergangenheit" },
-      { english: "The book I'm reading is interesting.", german: "Das Buch, das ich lese, ist interessant.", focus: "Relativsatz" },
-      { english: "The man you saw is my uncle.", german: "Der Mann, den du gesehen hast, ist mein Onkel.", focus: "Relativsatz · Akkusativ" },
-      { english: "I'm giving the gift to my sister.", german: "Ich gebe meiner Schwester das Geschenk.", focus: "Dativ + Akkusativ" },
-      { english: "She helps her grandmother.", german: "Sie hilft ihrer Großmutter.", focus: "Dativ · helfen" },
-      { english: "Thank you for the gift.", german: "Danke für das Geschenk.", focus: "Präposition · für" },
-      { english: "I'm thinking about you.", german: "Ich denke an dich.", focus: "Präposition · denken an" },
-      { english: "I'm afraid of spiders.", german: "Ich habe Angst vor Spinnen.", focus: "Idiom · vor + Dativ" },
-      { english: "She's interested in music.", german: "Sie interessiert sich für Musik.", focus: "Reflexivverb" },
-      { english: "Don't worry!", german: "Mach dir keine Sorgen!", focus: "Imperativ · Reflexiv" },
-      { english: "Have a nice day!", german: "Schönen Tag noch!", focus: "Verabschiedung" },
-      { english: "See you tomorrow!", german: "Bis morgen!", focus: "Verabschiedung" },
-      { english: "What did you do yesterday?", german: "Was hast du gestern gemacht?", focus: "Perfekt · Frage" },
-      { english: "Where were you?", german: "Wo warst du?", focus: "Präteritum · sein" },
-      { english: "I had a wonderful day.", german: "Ich hatte einen wunderbaren Tag.", focus: "Präteritum · haben" },
-      { english: "The film was boring.", german: "Der Film war langweilig.", focus: "Präteritum · sein" },
-      { english: "I'm tired because I worked a lot.", german: "Ich bin müde, weil ich viel gearbeitet habe.", focus: "Nebensatz · Perfekt" },
-      { english: "Do you want to come along?", german: "Möchtest du mitkommen?", focus: "Modalverb · trennbar" },
-      { english: "She doesn't want to talk about it.", german: "Sie will nicht darüber reden.", focus: "Modalverb · darüber" },
-      { english: "I'm sorry, I'm late.", german: "Es tut mir leid, ich bin spät dran.", focus: "Idiom" },
-      { english: "How do you say that in German?", german: "Wie sagt man das auf Deutsch?", focus: "man · Frage" },
-      { english: "I need to take a break.", german: "Ich muss eine Pause machen.", focus: "Modalverb · Idiom" },
-      { english: "Could you say that again?", german: "Könntest du das noch einmal sagen?", focus: "Konjunktiv II · Höflichkeit" },
-      { english: "I've lived here for three years.", german: "Ich wohne seit drei Jahren hier.", focus: "seit + Dativ · Präsens" },
-      { english: "We saw each other yesterday.", german: "Wir haben uns gestern gesehen.", focus: "Reflexiv · Perfekt" },
-      { english: "Please give me the salt.", german: "Gib mir bitte das Salz.", focus: "Imperativ · Dativ" },
-      { english: "I'm not feeling well today.", german: "Mir geht es heute nicht gut.", focus: "Dativ · es geht" },
-      { english: "He's getting on my nerves.", german: "Er geht mir auf die Nerven.", focus: "Idiom · Dativ" },
-    ];
+  // ── API key ────────────────────────────────────────────────────────────
+  const getKey  = () => localStorage.getItem("d32_key") || "";
+  const saveKey = (k) => k ? localStorage.setItem("d32_key", k) : localStorage.removeItem("d32_key");
 
-    // ─── Helpers ────────────────────────────────────────────────────────────
-    function shuffle(arr) {
-      const a = [...arr];
-      for (let i = a.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [a[i], a[j]] = [a[j], a[i]];
-      }
-      return a;
-    }
-    function extractJSONArray(text) {
-      const start = text.indexOf("[");
-      const end = text.lastIndexOf("]");
-      if (start === -1 || end === -1 || end <= start) return null;
-      try { return JSON.parse(text.substring(start, end + 1)); } catch { return null; }
-    }
+  // Persist generated sets across sessions
+  const SETS_KEY = "d32_sets";
+  function loadSets() {
+    try {
+      const raw = localStorage.getItem(SETS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  }
+  function saveSets(sets) {
+    try { localStorage.setItem(SETS_KEY, JSON.stringify(sets)); } catch {}
+  }
+  function clearSavedSets() {
+    localStorage.removeItem(SETS_KEY);
+  }
 
-    // ─── App ────────────────────────────────────────────────────────────────
-    function App() {
-      const [queue, setQueue] = useState(() => shuffle(SEED));
-      const [current, setCurrent] = useState(null);
-      const [history, setHistory] = useState([]);
-      const [historyIndex, setHistoryIndex] = useState(-1);
-      const [revealed, setRevealed] = useState(false);
-      const [generating, setGenerating] = useState(false);
-      const [practiced, setPracticed] = useState(0);
-      const seenRef = useRef(new Set());
-      const generatingRef = useRef(false);
-      const [voices, setVoices] = useState([]);
-      const [selectedVoiceURI, setSelectedVoiceURI] = useState("");
+  // ── Core helpers ───────────────────────────────────────────────────────
+  function extractJSONArray(text) {
+    const s = text.indexOf("["), e = text.lastIndexOf("]");
+    if (s === -1 || e === -1 || e <= s) return null;
+    try { return JSON.parse(text.substring(s, e + 1)); } catch { return null; }
+  }
 
-      const drawNext = useCallback(() => {
-        setHistoryIndex((idx) => {
-          if (idx < history.length - 1) {
-            const next = history[idx + 1];
-            setCurrent(next);
-            setRevealed(false);
-            return idx + 1;
-          }
-          setQueue((q) => {
-            let pool = q;
-            if (pool.length === 0) {
-              const unused = SEED.filter((s) => !seenRef.current.has(s.english));
-              pool = shuffle(unused.length > 0 ? unused : (seenRef.current.clear(), SEED));
-            }
-            const [next, ...rest] = pool;
-            seenRef.current.add(next.english);
-            setCurrent(next);
-            setHistory((h) => [...h, next]);
-            setRevealed(false);
-            return rest;
-          });
-          return idx + 1;
-        });
-      }, [history]);
-
-      useEffect(() => { if (!current) drawNext(); /* eslint-disable-next-line */ }, []);
-
-      // Background generation only if user supplied an API key
-      useEffect(() => {
-        const apiKey = window.ANTHROPIC_API_KEY;
-        if (!apiKey || queue.length >= 12 || generatingRef.current) return;
-        generatingRef.current = true;
-        setGenerating(true);
-        (async () => {
-          try {
-            const recent = Array.from(seenRef.current).slice(-30);
-            const res = await fetch("https://api.anthropic.com/v1/messages", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-                "x-api-key": apiKey,
-                "anthropic-version": "2023-06-01",
-                "anthropic-dangerous-direct-browser-access": "true",
-              },
-              body: JSON.stringify({
-                model: "claude-sonnet-4-20250514",
-                max_tokens: 1500,
-                messages: [{
-                  role: "user",
-                  content: `Generate 10 German translation practice sentences for someone studying "German in 32 lessons" by Adrienne (A1–B1, practical everyday German).
+  async function generateSet(apiKey, allPrevious) {
+    const recent = allPrevious.map((s) => s.english).slice(-60);
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 3000,
+        messages: [{
+          role: "user",
+          content: `Generate exactly 30 German translation practice sentences for someone studying "German in 32 lessons" by Adrienne (A1–B1, practical everyday German).
 
 REQUIREMENTS:
-- Mix grammar across the batch: Präsens, Modalverben (können, müssen, wollen, möchten, sollen), Perfekt (haben/sein + Partizip II), trennbare Verben, Akkusativ & Dativ, Nebensätze (weil, dass, wenn, ob), Konjunktiv II (würde, hätte, wäre), Relativsätze
-- Use casual "du" form when addressing someone (not Sie)
-- Natural, conversational — what real Germans actually say
-- Vary topics: daily life, work, food, travel, family, hobbies, weather, plans, feelings
-- Keep sentences 5–15 words in English
-- AVOID these recently-used English sentences: ${JSON.stringify(recent)}
+- Spread grammar evenly: Präsens, Modalverben (können/müssen/wollen/möchten/sollen), Perfekt with haben, Perfekt with sein, trennbare Verben, Akkusativ, Dativ, Nebensätze (weil/dass/wenn/ob), Konjunktiv II, Relativsätze
+- Casual "du" form, never Sie. Natural, conversational German.
+- Varied topics: greetings, daily routine, food & drink, work, transport, weather, shopping, family, hobbies, health, travel, feelings, plans
+- 5–15 words in English per sentence
+- AVOID these already-used sentences: ${JSON.stringify(recent)}
 
-Return ONLY a raw JSON array — no markdown fences, no preamble. Each item has:
-- "english": the English sentence
-- "german": the natural German translation
-- "focus": brief 2–4 word grammar/topic label in German
+Return ONLY a raw JSON array, no markdown, no preamble.
+Each item: {"english":"...","german":"...","focus":"..."}`,
+        }],
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`API ${res.status}${body ? ": " + body.slice(0, 160) : ""}`);
+    }
+    const data = await res.json();
+    const text = (data.content || []).map((c) => c.text || "").join("");
+    const parsed = extractJSONArray(text);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("No sentences in response");
+    return parsed
+      .filter((s) => s?.english && s?.german)
+      .map((s) => ({ english: s.english.trim(), german: s.german.trim(), focus: (s.focus || "").trim() }))
+      .slice(0, 30);
+  }
 
-Example:
-[{"english":"I have to leave now.","german":"Ich muss jetzt gehen.","focus":"Modalverb müssen"}]`
-                }]
-              })
-            });
-            if (!res.ok) throw new Error("API " + res.status);
-            const data = await res.json();
-            const text = (data.content || []).map((c) => c.text || "").join("");
-            const parsed = extractJSONArray(text);
-            if (Array.isArray(parsed) && parsed.length > 0) {
-              const valid = parsed
-                .filter((s) => s && typeof s.english === "string" && typeof s.german === "string")
-                .map((s) => ({ english: s.english.trim(), german: s.german.trim(), focus: (s.focus || "").trim() }));
-              if (valid.length > 0) setQueue((q) => [...q, ...shuffle(valid)]);
-            }
-          } catch (err) {
-            const unused = SEED.filter((s) => !seenRef.current.has(s.english));
-            const fill = unused.length > 0 ? shuffle(unused).slice(0, 10) : shuffle(SEED).slice(0, 10);
-            if (unused.length === 0) seenRef.current.clear();
-            setQueue((q) => [...q, ...fill]);
-          } finally {
-            generatingRef.current = false;
-            setGenerating(false);
-          }
-        })();
-      }, [queue.length]);
+  function parseSetsFromJSON(raw) {
+    if (!Array.isArray(raw) || raw.length === 0) throw new Error("Empty or invalid JSON");
+    const isNested = Array.isArray(raw[0]);
+    const flat = isNested ? raw.flat() : raw;
+    const valid = flat
+      .filter((s) => s && typeof s.english === "string" && typeof s.german === "string")
+      .map((s) => ({ english: s.english.trim(), german: s.german.trim(), focus: (s.focus || "").trim() }));
+    if (valid.length === 0) throw new Error("No valid sentences found");
+    if (isNested) {
+      let i = 0;
+      return raw.map((set) => { const c = valid.slice(i, i + set.length); i += set.length; return c; }).filter((s) => s.length > 0);
+    }
+    const sets = [];
+    for (let i = 0; i < valid.length; i += 30) sets.push(valid.slice(i, i + 30));
+    return sets;
+  }
 
-      // Also refill from seed (no API) when queue empties — keeps it endless without a key
-      useEffect(() => {
-        if (queue.length >= 12) return;
-        if (window.ANTHROPIC_API_KEY) return; // API path handles it
-        const unused = SEED.filter((s) => !seenRef.current.has(s.english));
-        const fill = unused.length > 0 ? shuffle(unused).slice(0, 20) : (seenRef.current.clear(), shuffle(SEED).slice(0, 20));
-        setQueue((q) => [...q, ...fill]);
-      }, [queue.length]);
+  // Real blob download — works fine outside Claude.ai sandbox (e.g. Netlify)
+  function downloadJSON(sets) {
+    const blob = new Blob([JSON.stringify(sets, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `deutsch32-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
 
-      // iPhone/Safari often loads voices asynchronously. Keep the list updated,
-      // then explicitly choose the best installed German voice instead of letting
-      // the browser fall back to a low-quality default.
-      useEffect(() => {
-        if (typeof window === "undefined" || !window.speechSynthesis) return;
+  // Pick the best available German voice.
+  // Priority: Enhanced/Premium > named "Anna" > any de-DE > any de-*.
+  // On iOS, voices load async — we retry up to 20 times (2s) if none are ready yet.
+  function pickGermanVoice(voices) {
+    const de = voices.filter((v) => v.lang?.toLowerCase().startsWith("de"));
+    if (de.length === 0) return null;
+    const priority = [
+      de.find((v) => /enhanced|premium/i.test(v.name)),
+      de.find((v) => /anna/i.test(v.name)),
+      de.find((v) => v.lang?.toLowerCase() === "de-de"),
+      de[0],
+    ];
+    return priority.find(Boolean) || null;
+  }
 
-        const loadVoices = () => {
-          const all = window.speechSynthesis.getVoices();
-          const german = all
-            .filter((v) => v.lang && v.lang.toLowerCase().startsWith("de"))
-            .sort((a, b) => {
-              const score = (v) => {
-                const name = (v.name || "").toLowerCase();
-                let points = 0;
-                if (v.lang === "de-DE") points += 20;
-                if (name.includes("siri")) points += 12;
-                if (name.includes("premium")) points += 10;
-                if (name.includes("enhanced")) points += 8;
-                if (name.includes("anna")) points += 6;
-                if (name.includes("compact")) points -= 10;
-                return points;
-              };
-              return score(b) - score(a);
-            });
+  function speakGerman(text) {
+    if (!window.speechSynthesis) return;
+    try { window.speechSynthesis.cancel(); } catch {}
 
-          setVoices(german);
-          setSelectedVoiceURI((current) => current || (german[0] && german[0].voiceURI) || "");
-        };
+    function attempt(retriesLeft) {
+      const voices = window.speechSynthesis.getVoices();
+      const voice  = pickGermanVoice(voices);
 
-        loadVoices();
-        window.speechSynthesis.onvoiceschanged = loadVoices;
+      if (!voice && retriesLeft > 0) {
+        // Voices not loaded yet (common on iOS Safari) — wait and retry
+        setTimeout(() => attempt(retriesLeft - 1), 100);
+        return;
+      }
 
-        // Safari sometimes needs a second nudge after page load.
-        const timer = setTimeout(loadVoices, 500);
-        return () => {
-          clearTimeout(timer);
-          if (window.speechSynthesis.onvoiceschanged === loadVoices) {
-            window.speechSynthesis.onvoiceschanged = null;
-          }
-        };
-      }, []);
-
-      const getPreferredGermanVoice = useCallback(() => {
-        if (typeof window === "undefined" || !window.speechSynthesis) return null;
-        const all = window.speechSynthesis.getVoices();
-        const selected = all.find((v) => v.voiceURI === selectedVoiceURI);
-        if (selected) return selected;
-
-        return all.find((v) => v.lang === "de-DE" && /siri|premium|enhanced|anna/i.test(v.name || ""))
-          || all.find((v) => v.lang === "de-DE")
-          || all.find((v) => v.lang && v.lang.toLowerCase().startsWith("de"))
-          || null;
-      }, [selectedVoiceURI]);
-
-      const speakGerman = useCallback((text) => {
-        if (typeof window === "undefined" || !window.speechSynthesis) return;
-        try {
-          window.speechSynthesis.cancel();
-          const u = new SpeechSynthesisUtterance(text);
-          const voice = getPreferredGermanVoice();
-          if (voice) {
-            u.voice = voice;
-            u.lang = voice.lang || "de-DE";
-          } else {
-            u.lang = "de-DE";
-          }
-          u.rate = 0.88;
-          u.pitch = 1.0;
-          window.speechSynthesis.speak(u);
-        } catch {}
-      }, [getPreferredGermanVoice]);
-
-      const reveal = useCallback(() => {
-        if (revealed) return;
-        setRevealed(true);
-        if (current) setTimeout(() => speakGerman(current.german), 200);
-      }, [revealed, current, speakGerman]);
-
-      const next = useCallback(() => {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-        setPracticed((p) => p + 1);
-        drawNext();
-      }, [drawNext]);
-
-      const previous = useCallback(() => {
-        if (window.speechSynthesis) window.speechSynthesis.cancel();
-        if (historyIndex > 0) {
-          const prev = history[historyIndex - 1];
-          setHistoryIndex(historyIndex - 1);
-          setCurrent(prev);
-          setRevealed(true);
-        }
-      }, [historyIndex, history]);
-
-      useEffect(() => {
-        const handler = (e) => {
-          const tag = (e.target && e.target.tagName) || "";
-          if (tag === "INPUT" || tag === "TEXTAREA") return;
-          if (e.code === "Space") { e.preventDefault(); if (revealed) next(); else reveal(); }
-          else if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); next(); }
-          else if (e.key === "ArrowLeft") { e.preventDefault(); previous(); }
-          else if (e.key === "r" || e.key === "R") {
-            if (revealed && current) speakGerman(current.german); else reveal();
-          }
-        };
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
-      }, [revealed, next, reveal, previous, current, speakGerman]);
-
-      const keyConfigured = !!window.ANTHROPIC_API_KEY;
-
-      return (
-        <div className="min-h-screen w-full flex flex-col"
-          style={{
-            backgroundColor: "#EFE7D4",
-            color: "#1C1815",
-            fontFamily: '"Manrope", ui-sans-serif, system-ui, sans-serif',
-            backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(178,58,47,0.06), transparent 60%), radial-gradient(ellipse 80% 50% at 50% 110%, rgba(28,24,21,0.04), transparent 60%)",
-          }}>
-
-          <header className="px-6 sm:px-10 pt-6 pb-2 flex items-center justify-between fadein">
-            <div className="flex items-center gap-3">
-              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#B23A2F" }} title={generating ? "generating more…" : "ready"} />
-              <div className="text-[11px] uppercase tracking-[0.22em]" style={{ color: "#6B6157" }}>
-                Deutsch <span className="mx-1">·</span> 32
-              </div>
-            </div>
-            <div className="text-[11px] uppercase tracking-[0.22em] num" style={{ color: "#6B6157" }}>
-              <span style={{ color: "#1C1815", fontWeight: 600 }}>{practiced}</span>
-              <span className="mx-2">·</span>practiced
-            </div>
-          </header>
-
-          <main className="flex-1 flex items-center justify-center px-6 sm:px-10 py-8">
-            <div className="w-full max-w-2xl" key={current ? current.english : "loading"}>
-              {current ? (
-                <>
-                  <div className="flex items-center gap-3 mb-6 rise">
-                    <div className="h-px flex-shrink-0 w-8" style={{ backgroundColor: "#1C1815", opacity: 0.4 }} />
-                    <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em]" style={{ color: "#6B6157" }}>
-                      {current.focus || "Übung"}
-                    </div>
-                  </div>
-
-                  <h1 className="serif rise text-3xl sm:text-5xl md:text-6xl leading-[1.1] font-medium"
-                    style={{ letterSpacing: "-0.015em", color: "#1C1815", fontVariationSettings: '"SOFT" 50, "WONK" 0, "opsz" 100' }}>
-                    {current.english}
-                  </h1>
-
-                  <div className="my-8 sm:my-10 h-px w-24 drawline" style={{ backgroundColor: "#1C1815", opacity: 0.25 }} />
-
-                  {revealed ? (
-                    <div className="rise">
-                      <div className="flex items-start gap-4">
-                        <p className="serif italic flex-1 text-2xl sm:text-4xl md:text-5xl leading-[1.15] font-normal"
-                          style={{ letterSpacing: "-0.01em", color: "#B23A2F", fontVariationSettings: '"SOFT" 100, "opsz" 100' }}>
-                          {current.german}
-                        </p>
-                        <button onClick={() => speakGerman(current.german)} className="speaker mt-2 sm:mt-4 flex-shrink-0"
-                          style={{ color: "#B23A2F" }} aria-label="Hear German pronunciation" title="Hear it (R)">
-                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M11 5L6 9H2v6h4l5 4V5z" />
-                            <path d="M15.54 8.46a5 5 0 010 7.07" />
-                            <path d="M19.07 4.93a10 10 0 010 14.14" />
-                          </svg>
-                        </button>
-                      </div>
-
-                      <div className="mt-10 flex items-center gap-4 flex-wrap">
-                        <button onClick={next} className="btn-primary px-7 py-3.5 text-[13px] uppercase tracking-[0.18em] font-medium" autoFocus>
-                          Next<span className="ml-3 opacity-60">→</span>
-                        </button>
-                        {historyIndex > 0 && (
-                          <button onClick={previous} className="btn-ghost px-5 py-3 text-[12px] uppercase tracking-[0.18em] font-medium border-b"
-                            style={{ borderColor: "rgba(28,24,21,0.3)", color: "#6B6157" }}>← Previous</button>
-                        )}
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="rise">
-                      <button onClick={reveal} className="btn-primary px-7 py-3.5 text-[13px] uppercase tracking-[0.18em] font-medium" autoFocus>
-                        Show Answer
-                      </button>
-                      <p className="mt-6 text-sm italic" style={{ color: "#6B6157", fontFamily: '"Fraunces", serif' }}>
-                        Say it aloud first, then reveal.
-                      </p>
-                    </div>
-                  )}
-                </>
-              ) : (
-                <div className="text-center" style={{ color: "#6B6157" }}>Lade…</div>
-              )}
-            </div>
-          </main>
-
-          <footer className="px-6 sm:px-10 pb-6 pt-2 fadein">
-            <div className="flex items-center justify-between gap-4 flex-wrap text-[11px]" style={{ color: "#6B6157" }}>
-              <div className="flex items-center gap-4 flex-wrap">
-                <span className="flex items-center gap-1.5"><kbd>Space</kbd><span>reveal / next</span></span>
-                <span className="flex items-center gap-1.5"><kbd>R</kbd><span>hear it</span></span>
-                <span className="flex items-center gap-1.5"><kbd>←</kbd><span>previous</span></span>
-              </div>
-              <div className="flex items-center gap-3 flex-wrap">
-                {voices.length > 0 ? (
-                  <>
-                    <span className="uppercase tracking-[0.22em]" style={{ opacity: 0.7 }}>Voice</span>
-                    <select
-                      className="voice-select"
-                      value={selectedVoiceURI}
-                      onChange={(e) => setSelectedVoiceURI(e.target.value)}
-                      aria-label="German voice"
-                    >
-                      {voices.map((v) => (
-                        <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}</option>
-                      ))}
-                    </select>
-                  </>
-                ) : (
-                  <span className="uppercase tracking-[0.22em]" style={{ opacity: 0.7 }}>No German voice found yet</span>
-                )}
-                <div className="uppercase tracking-[0.22em] num" style={{ opacity: 0.7 }}>
-                  {generating ? "preparing more…" : (keyConfigured ? `queue: ${queue.length}` : `${SEED.length} sentences · reshuffled`)}
-                </div>
-              </div>
-            </div>
-          </footer>
-        </div>
-      );
+      try {
+        const u = new SpeechSynthesisUtterance(text);
+        u.lang = "de-DE";
+        u.rate = 0.92;
+        if (voice) u.voice = voice;
+        window.speechSynthesis.speak(u);
+      } catch {}
     }
 
-    const root = ReactDOM.createRoot(document.getElementById('root'));
-    root.render(<App />);
-  </script>
+    attempt(20); // retry up to 20 × 100ms = 2 seconds
+  }
+
+  // Warm up the voice engine on first user interaction so voices are
+  // pre-loaded by the time the first answer is revealed (iOS requirement).
+  let voicesWarmedUp = false;
+  function warmUpVoices() {
+    if (voicesWarmedUp || !window.speechSynthesis) return;
+    voicesWarmedUp = true;
+    // Trigger voice list load
+    window.speechSynthesis.getVoices();
+    // Also hook the onvoiceschanged event so the list is cached
+    window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
+  }
+
+  // ── SVG Icons ──────────────────────────────────────────────────────────
+  const Ico = {
+    Refresh: ({ spin: s }) => (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+        style={{ animation: s ? "spin 1s linear infinite" : "none", flexShrink: 0 }}>
+        <path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+      </svg>
+    ),
+    Volume: () => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M15.54 8.46a5 5 0 010 7.07"/>
+        <path d="M19.07 4.93a10 10 0 010 14.14"/>
+      </svg>
+    ),
+    Download: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    ),
+    Upload: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    ),
+    Key: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+      </svg>
+    ),
+    Copy: () => (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <rect x="9" y="9" width="13" height="13" rx="2"/>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg>
+    ),
+    Close: () => (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    ),
+    Shuffle: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+        <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+      </svg>
+    ),
+  };
+
+  // ── Settings modal ─────────────────────────────────────────────────────
+  function SettingsModal({ onClose, onSaved }) {
+    const [tab, setTab] = useState("key");
+    const [key, setKey] = useState(getKey);
+    const [saved, setSaved] = useState(false);
+
+    const save = () => {
+      saveKey(key.trim());
+      setSaved(true);
+      setTimeout(() => { setSaved(false); onSaved(key.trim()); onClose(); }, 700);
+    };
+
+    return (
+      <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="modal-box" style={{ maxWidth: 480 }}>
+          <div className="modal-header">
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1815" }}>Settings</div>
+              <div style={{ fontSize: 11, color: "#6B6157", marginTop: 3 }}>Anthropic API key</div>
+            </div>
+            <button className="icon-btn" style={{ color: "#6B6157" }} onClick={onClose}><Ico.Close /></button>
+          </div>
+
+          <div className="modal-body">
+            <div className="tab-bar">
+              <button className={`tab-item ${tab === "key" ? "active" : ""}`} onClick={() => setTab("key")}>API Key</button>
+              <button className={`tab-item ${tab === "help" ? "active" : ""}`} onClick={() => setTab("help")}>How to get one</button>
+            </div>
+
+            {tab === "key" && (
+              <div>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#6B6157", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Anthropic API Key
+                </label>
+                <input className="key-input" type="password" placeholder="sk-ant-api03-..."
+                  value={key} onChange={(e) => setKey(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && save()} autoFocus />
+                <p style={{ fontSize: 11, color: "#6B6157", marginTop: 10, lineHeight: 1.7 }}>
+                  Stored in your browser's local storage. Sent only to Anthropic's API.
+                  {key && <span style={{ color: "#2D7A4F" }}> ✓ Key is set.</span>}
+                </p>
+              </div>
+            )}
+
+            {tab === "help" && (
+              <div style={{ fontSize: 12, color: "#1C1815", lineHeight: 1.85 }}>
+                <ol style={{ paddingLeft: 18, margin: 0 }}>
+                  <li>Go to <strong>console.anthropic.com</strong></li>
+                  <li>Sign up or log in (free)</li>
+                  <li>Click <strong>API Keys</strong> in the sidebar</li>
+                  <li>Click <strong>Create Key</strong> → copy it</li>
+                  <li>Paste it in the API Key tab and save</li>
+                </ol>
+                <p style={{ marginTop: 12, fontSize: 11, color: "#6B6157" }}>
+                  Each set of 30 sentences costs roughly $0.01–0.02 USD.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="modal-footer">
+            <button className="btn-primary"
+              style={{ padding: "8px 18px", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}
+              onClick={save}>{saved ? "Saved ✓" : "Save key"}</button>
+            {key && <button className="btn-sm" onClick={() => { setKey(""); saveKey(""); }}>Clear</button>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Export modal ───────────────────────────────────────────────────────
+  function ExportModal({ sets, onClose }) {
+    const [copied, setCopied] = useState(false);
+    const textareaRef = useRef(null);
+    const json = JSON.stringify(sets, null, 2);
+
+    const copy = () => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(json).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200); });
+      } else {
+        textareaRef.current?.select();
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2200);
+      }
+    };
+
+    return (
+      <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="modal-box" style={{ maxWidth: 560 }}>
+          <div className="modal-header">
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1815" }}>Export sentences</div>
+              <div style={{ fontSize: 11, color: "#6B6157", marginTop: 3 }}>
+                {sets.length} set{sets.length !== 1 ? "s" : ""} · {sets.flat().length} sentences
+              </div>
+            </div>
+            <button className="icon-btn" style={{ color: "#6B6157" }} onClick={onClose}><Ico.Close /></button>
+          </div>
+
+          <div className="modal-body">
+            <button className="btn-primary"
+              style={{ padding: "11px 20px", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, width: "100%", justifyContent: "center" }}
+              onClick={() => downloadJSON(sets)}>
+              <Ico.Download /> Download deutsch32.json
+            </button>
+
+            <div className="divider">
+              <div className="divider-line" />
+              <span className="divider-text">or copy the JSON manually</span>
+              <div className="divider-line" />
+            </div>
+
+            <textarea ref={textareaRef} readOnly className="json-area" value={json}
+              onFocus={(e) => e.target.select()} onClick={(e) => e.target.select()} />
+          </div>
+
+          <div className="modal-footer">
+            <button className="btn-sm" style={{ padding: "7px 14px" }} onClick={copy}>
+              <Ico.Copy /> {copied ? "Copied ✓" : "Copy JSON"}
+            </button>
+            <span style={{ fontSize: 11, color: "#6B6157" }}>Paste into TextEdit → save as .json</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main App ───────────────────────────────────────────────────────────
+  function App() {
+    const [apiKey, setApiKey]             = useState(getKey);
+    const [sets, setSets]                 = useState(loadSets);  // restore from localStorage
+    const [activeSet, setActiveSet]       = useState(0);
+    const [cardIndex, setCardIndex]       = useState(0);
+    const [revealed, setRevealed]         = useState(false);
+    const [generating, setGenerating]     = useState(false);
+    const [error, setError]               = useState(null);
+    const [importMsg, setImportMsg]       = useState(null);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showExport, setShowExport]     = useState(false);
+    const importRef = useRef(null);
+
+    // Auto-save sets to localStorage whenever they change
+    useEffect(() => { saveSets(sets); }, [sets]);
+
+    // Auto-save sets to localStorage whenever they change
+    useEffect(() => { saveSets(sets); }, [sets]);
+
+    const allSentences = sets.flat();
+    const currentSet   = sets[activeSet] || [];
+    const current      = currentSet[cardIndex] || null;
+    const total        = currentSet.length;
+    const hasKey       = !!apiKey;
+
+    const switchSet = useCallback((idx) => {
+      window.speechSynthesis?.cancel();
+      setActiveSet(idx); setCardIndex(0); setRevealed(false);
+    }, []);
+
+    const shuffleCurrentSet = useCallback(() => {
+      window.speechSynthesis?.cancel();
+      setSets((prev) => {
+        const next = prev.map((set, i) => {
+          if (i !== activeSet) return set;
+          const shuffled = [...set];
+          for (let j = shuffled.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [shuffled[j], shuffled[k]] = [shuffled[k], shuffled[j]];
+          }
+          return shuffled;
+        });
+        return next;
+      });
+      setCardIndex(0);
+      setRevealed(false);
+    }, [activeSet]);
+
+    const generate = useCallback(async () => {
+      if (generating || !hasKey) return;
+      setGenerating(true); setError(null); setImportMsg(null);
+      try {
+        const newSet = await generateSet(apiKey, allSentences);
+        setSets((prev) => {
+          const next = [...prev, newSet];
+          setActiveSet(next.length - 1); setCardIndex(0); setRevealed(false);
+          return next;
+        });
+      } catch (e) {
+        setError(e.message || "Generation failed. Check your API key and connection.");
+      } finally { setGenerating(false); }
+    }, [generating, hasKey, apiKey, allSentences]);
+
+    const handleImportClick = () => { setError(null); setImportMsg(null); importRef.current?.click(); };
+
+    const handleFileChange = (e) => {
+      const file = e.target.files?.[0]; if (!file) return; e.target.value = "";
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const raw = JSON.parse(ev.target.result);
+          const imported = parseSetsFromJSON(raw);
+          setSets(imported); setActiveSet(0); setCardIndex(0); setRevealed(false); setError(null);
+          setImportMsg(`Imported ${imported.length} set${imported.length !== 1 ? "s" : ""} · ${imported.flat().length} sentences`);
+        } catch (err) { setError("Import failed: " + err.message); }
+      };
+      reader.readAsText(file);
+    };
+
+    const goNext = useCallback(() => {
+      window.speechSynthesis?.cancel();
+      setCardIndex((i) => Math.min(i + 1, total - 1)); setRevealed(false);
+    }, [total]);
+
+    const goPrev = useCallback(() => {
+      window.speechSynthesis?.cancel();
+      setCardIndex((i) => Math.max(i - 1, 0)); setRevealed(false);
+    }, []);
+
+    const reveal = useCallback(() => {
+      if (revealed || !current) return;
+      warmUpVoices();
+      setRevealed(true); speakGerman(current.german);
+    }, [revealed, current]);
+
+    // Warm up iOS voice engine on first interaction
+    useEffect(() => {
+      const handler = () => { warmUpVoices(); document.removeEventListener("touchstart", handler); document.removeEventListener("mousedown", handler); };
+      document.addEventListener("touchstart", handler, { once: true, passive: true });
+      document.addEventListener("mousedown",  handler, { once: true, passive: true });
+      return () => { document.removeEventListener("touchstart", handler); document.removeEventListener("mousedown", handler); };
+    }, []);
+
+    useEffect(() => {
+      const handler = (e) => {
+        if (showSettings || showExport) { if (e.key === "Escape") { setShowSettings(false); setShowExport(false); } return; }
+        const tag = e.target?.tagName || "";
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        if (e.code === "Space")                             { e.preventDefault(); revealed ? goNext() : reveal(); }
+        else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); goNext(); }
+        else if (e.key === "ArrowLeft")                     { e.preventDefault(); goPrev(); }
+        else if (e.key === "r" || e.key === "R")            { revealed && current ? speakGerman(current.german) : reveal(); }
+      };
+      window.addEventListener("keydown", handler);
+      return () => window.removeEventListener("keydown", handler);
+    }, [revealed, goNext, goPrev, reveal, current, showSettings, showExport]);
+
+    const isEmpty = sets.length === 0;
+
+    return (
+      <div style={{
+        minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column",
+        backgroundColor: "#EFE7D4", color: "#1C1815",
+        fontFamily: '"Manrope", ui-sans-serif, system-ui, sans-serif',
+        backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(178,58,47,0.06), transparent 60%)",
+      }}>
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} onSaved={(k) => setApiKey(k)} />}
+        {showExport && sets.length > 0 && <ExportModal sets={sets} onClose={() => setShowExport(false)} />}
+        <input ref={importRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleFileChange} />
+
+        {/* Header */}
+        <header style={{ padding: "15px 24px 12px", borderBottom: "1px solid rgba(28,24,21,0.08)" }} className="fadein">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: sets.length > 0 ? 11 : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#B23A2F", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.24em", color: "#6B6157" }}>Deutsch · 32</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <button className="btn-sm" onClick={() => setShowSettings(true)}><Ico.Key /> API Key</button>
+              <button className="btn-sm" onClick={handleImportClick}><Ico.Upload /> Import</button>
+              {sets.length > 0 && (
+                <button className="btn-sm" title="Clear all sets from memory"
+                  onClick={() => { if (window.confirm("Clear all sets? This cannot be undone.")) { clearSavedSets(); setSets([]); setActiveSet(0); setCardIndex(0); setRevealed(false); } }}>
+                  Clear all
+                </button>
+              )}
+              {sets.length > 0 && <button className="btn-sm" onClick={() => setShowExport(true)}><Ico.Download /> Export</button>}
+              {sets.length > 0 && (
+                <button className="btn-sm" onClick={shuffleCurrentSet} title="Shuffle order of current set">
+                  <Ico.Shuffle /> Shuffle
+                </button>
+              )}
+              <button className="btn-primary"
+                style={{ padding: "7px 14px", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 600 }}
+                onClick={hasKey ? generate : () => setShowSettings(true)} disabled={generating}>
+                <Ico.Refresh spin={generating} />
+                {generating ? <span className="generating-dots">Generating</span>
+                  : !hasKey ? "Set API Key"
+                  : sets.length === 0 ? "Generate Set 1"
+                  : `Generate Set ${sets.length + 1}`}
+              </button>
+            </div>
+          </div>
+
+          {importMsg && <p style={{ fontSize: 11, color: "#2D7A4F", fontWeight: 500, margin: "0 0 8px" }}>✓ {importMsg}</p>}
+          {error     && <p style={{ fontSize: 12, color: "#B23A2F", margin: "0 0 8px" }}>{error}</p>}
+
+          {sets.length > 0 && (
+            <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
+              {sets.map((_, i) => (
+                <button key={i} className={`set-tab ${activeSet === i ? "active" : ""}`} onClick={() => switchSet(i)}>
+                  Set {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+        </header>
+
+        {/* Main */}
+        <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 28px" }}>
+
+          {isEmpty && (
+            <div className="fadein" style={{ textAlign: "center", maxWidth: 420 }}>
+              <div className="serif" style={{ fontSize: "clamp(56px,12vw,88px)", color: "#1C1815", fontStyle: "italic", opacity: 0.1, lineHeight: 1, marginBottom: 24 }}>D</div>
+              <p className="serif" style={{ fontSize: "clamp(22px,4vw,30px)", color: "#1C1815", marginBottom: 12 }}>Bereit zum Üben?</p>
+              <p style={{ fontSize: 14, color: "#6B6157", lineHeight: 1.8, marginBottom: 32 }}>
+                {hasKey
+                  ? <>Generate a fresh set of 30 sentences,<br />or import a previously saved file.</>
+                  : <>Set your API key to get started,<br />or import a previously saved file.</>}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+                {hasKey ? (
+                  <button className="btn-primary"
+                    style={{ padding: "12px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                    onClick={generate} disabled={generating}>
+                    <Ico.Refresh spin={generating} />
+                    {generating ? <span className="generating-dots">Generating</span> : "Generate Set 1"}
+                  </button>
+                ) : (
+                  <button className="btn-primary"
+                    style={{ padding: "12px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                    onClick={() => setShowSettings(true)}>
+                    <Ico.Key /> Set API Key
+                  </button>
+                )}
+                <button className="btn-sm" style={{ padding: "10px 18px" }} onClick={handleImportClick}>
+                  <Ico.Upload /> Import file
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isEmpty && current && (
+            <div style={{ width: "100%", maxWidth: 640 }} key={`${activeSet}-${cardIndex}`}>
+              <div className="progress-bar fadein" style={{ marginBottom: 28 }}>
+                <div className="progress-fill" style={{ width: `${((cardIndex + 1) / total) * 100}%` }} />
+              </div>
+
+              <div className="rise" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 24, height: 1, background: "#1C1815", opacity: 0.35, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.26em", color: "#6B6157" }}>
+                    {current.focus || "Übung"}
+                  </span>
+                </div>
+                <span className="num" style={{ fontSize: 11, fontWeight: 500, color: "#6B6157" }}>
+                  {cardIndex + 1} <span style={{ opacity: 0.4 }}>/ {total}</span>
+                </span>
+              </div>
+
+              <h1 className="serif rise" style={{
+                fontSize: "clamp(28px,5.5vw,52px)", lineHeight: 1.1,
+                fontWeight: 500, letterSpacing: "-0.015em", color: "#1C1815", margin: 0,
+              }}>
+                {current.english}
+              </h1>
+
+              <div className="drawline" style={{ height: 1, width: 80, background: "#1C1815", opacity: 0.2, margin: "32px 0" }} />
+
+              {revealed ? (
+                <div className="rise">
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                    <p className="serif" style={{
+                      fontSize: "clamp(22px,4.5vw,44px)", lineHeight: 1.2, fontStyle: "italic",
+                      letterSpacing: "-0.01em", color: "#B23A2F", flex: 1, margin: 0,
+                    }}>
+                      {current.german}
+                    </p>
+                    <button className="icon-btn" style={{ color: "#B23A2F", marginTop: 4, flexShrink: 0 }}
+                      onClick={() => speakGerman(current.german)} title="Hear it (R)">
+                      <Ico.Volume />
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: 36, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <button className="btn-ghost" disabled={cardIndex === 0}
+                      style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.16em", fontWeight: 600,
+                        borderBottom: "1px solid rgba(28,24,21,0.25)", color: "#6B6157", paddingBottom: 2 }}
+                      onClick={goPrev}>← Prev</button>
+
+                    {cardIndex < total - 1 ? (
+                      <button className="btn-primary"
+                        style={{ padding: "10px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                        onClick={goNext} autoFocus>Next →</button>
+                    ) : (
+                      <button className="btn-primary" disabled={generating}
+                        style={{ padding: "10px 24px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                        onClick={generate} autoFocus>
+                        <Ico.Refresh spin={generating} />
+                        {generating ? <span className="generating-dots">Generating</span> : `Generate Set ${sets.length + 1}`}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="rise">
+                  <button className="btn-primary"
+                    style={{ padding: "12px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                    onClick={reveal} autoFocus>Show Answer</button>
+                  <p className="serif" style={{ fontSize: 14, fontStyle: "italic", color: "#6B6157", marginTop: 20 }}>
+                    Say it aloud first, then reveal.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        {!isEmpty && (
+          <footer className="fadein" style={{ padding: "8px 24px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", fontSize: 11, color: "#6B6157" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>Space</kbd> reveal / next</span>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>R</kbd> hear it</span>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>← →</kbd> navigate</span>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>Esc</kbd> close panel</span>
+              </div>
+              <span className="num" style={{ opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.18em" }}>
+                {sets.length} set{sets.length !== 1 ? "s" : ""} · {allSentences.length} sentences · auto-saved
+              </span>
+            </div>
+          </footer>
+        )}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
 </body>
 </html>
