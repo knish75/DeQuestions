@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Deutsch · 32</title>
+
+  <!--
+  ───────────────────────────────────────────────────────────────────────────
+   OPTIONAL: AI-generated sentences (truly endless variety)
+  ───────────────────────────────────────────────────────────────────────────
+   The 77 built-in sentences reshuffle forever, so this app works perfectly
+   without any setup. If you'd ALSO like fresh AI-generated sentences mixed
+   in, get a key at https://console.anthropic.com/ and paste it below.
+  -->
+  <script>
+    window.ANTHROPIC_API_KEY = ""; // ← optional: paste your key between the quotes
+  </script>
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <!-- React + Babel + Tailwind via CDN -->
+  <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+  <style>
+    html, body { margin: 0; padding: 0; background: #EFE7D4; }
+    .serif { font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif; font-optical-sizing: auto; font-variation-settings: "SOFT" 50, "WONK" 0; }
+    @keyframes riseIn { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: translateY(0); } }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+    @keyframes drawLine { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+    .rise { animation: riseIn 0.5s cubic-bezier(0.2, 0.8, 0.2, 1) both; }
+    .fadein { animation: fadeIn 0.4s ease-out both; }
+    .drawline { animation: drawLine 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) both; transform-origin: left center; }
+    .btn-primary { background: #1C1815; color: #EFE7D4; transition: transform 120ms ease, background 160ms ease, letter-spacing 200ms ease; cursor: pointer; border: none; }
+    .btn-primary:hover { background: #B23A2F; letter-spacing: 0.04em; }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-ghost { transition: color 160ms ease, border-color 160ms ease; cursor: pointer; background: none; border: none; }
+    .btn-ghost:hover { color: #B23A2F; border-color: #B23A2F; }
+    .speaker { transition: transform 200ms ease, color 200ms ease; cursor: pointer; background: none; border: none; padding: 0; }
+    .speaker:hover { transform: scale(1.08); color: #B23A2F; }
+    .speaker:active { transform: scale(0.95); }
+    kbd { font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 500; padding: 2px 6px; border: 1px solid rgba(28,24,21,0.25); border-bottom-width: 2px; border-radius: 4px; background: rgba(255,255,255,0.4); color: #1C1815; }
+    .num { font-variant-numeric: tabular-nums; }
+    button:focus { outline: none; }
+    button:focus-visible { outline: 2px solid #B23A2F; outline-offset: 3px; }
+    .voice-select { max-width: 260px; border: 1px solid rgba(28,24,21,0.22); border-radius: 999px; background: rgba(255,255,255,0.28); padding: 7px 12px; color: #1C1815; font-size: 12px; }
+  </style>
+</head>
+<body>
+  <div id="root"></div>
+
+  <script type="text/babel" data-presets="react">
+    const { useState, useEffect, useRef, useCallback } = React;
+
+    // ─── Seed pool (77 sentences, A1–B1, casual du) ─────────────────────────
+    const SEED = [
+      { english: "Hello, how are you?", german: "Hallo, wie geht es dir?", focus: "Begrüßung" },
+      { english: "My name is Thomas.", german: "Ich heiße Thomas.", focus: "Vorstellung" },
+      { english: "I am twenty-five years old.", german: "Ich bin fünfundzwanzig Jahre alt.", focus: "Zahlen · sein" },
+      { english: "Where do you live?", german: "Wo wohnst du?", focus: "Fragewort" },
+      { english: "I live in Berlin.", german: "Ich wohne in Berlin.", focus: "Präsens" },
+      { english: "What do you do for a living?", german: "Was machst du beruflich?", focus: "Beruf" },
+      { english: "I am a teacher.", german: "Ich bin Lehrer.", focus: "Beruf · sein" },
+      { english: "Do you have children?", german: "Hast du Kinder?", focus: "haben · Frage" },
+      { english: "I have two brothers and one sister.", german: "Ich habe zwei Brüder und eine Schwester.", focus: "Akkusativ · Familie" },
+      { english: "She speaks three languages.", german: "Sie spricht drei Sprachen.", focus: "Präsens · 3. Person" },
+      { english: "Do you speak English?", german: "Sprichst du Englisch?", focus: "Frage" },
+      { english: "I don't understand.", german: "Ich verstehe nicht.", focus: "Verneinung" },
+      { english: "Can you repeat that, please?", german: "Kannst du das bitte wiederholen?", focus: "Modalverb können" },
+      { english: "What time is it?", german: "Wie spät ist es?", focus: "Uhrzeit" },
+      { english: "It's half past seven.", german: "Es ist halb acht.", focus: "Uhrzeit" },
+      { english: "I'm hungry.", german: "Ich habe Hunger.", focus: "Idiom · haben" },
+      { english: "I'm thirsty.", german: "Ich habe Durst.", focus: "Idiom · haben" },
+      { english: "What would you like to drink?", german: "Was möchtest du trinken?", focus: "möchten" },
+      { english: "I'd like a coffee, please.", german: "Ich hätte gern einen Kaffee, bitte.", focus: "Konjunktiv · Bestellen" },
+      { english: "How much does that cost?", german: "Wie viel kostet das?", focus: "Einkaufen" },
+      { english: "That is too expensive.", german: "Das ist zu teuer.", focus: "Adjektiv" },
+      { english: "Where is the train station?", german: "Wo ist der Bahnhof?", focus: "Wegbeschreibung" },
+      { english: "Go straight ahead.", german: "Geh geradeaus.", focus: "Imperativ" },
+      { english: "Turn left at the corner.", german: "Bieg an der Ecke links ab.", focus: "Trennbares Verb · Imperativ" },
+      { english: "I'm looking for the post office.", german: "Ich suche die Post.", focus: "Akkusativ" },
+      { english: "The weather is beautiful today.", german: "Das Wetter ist heute schön.", focus: "Wetter" },
+      { english: "It's raining.", german: "Es regnet.", focus: "Wetter · es" },
+      { english: "I have to go to work.", german: "Ich muss zur Arbeit gehen.", focus: "Modalverb müssen" },
+      { english: "Can you help me, please?", german: "Kannst du mir bitte helfen?", focus: "Dativ · können" },
+      { english: "I'm waiting for the bus.", german: "Ich warte auf den Bus.", focus: "Präposition · warten auf" },
+      { english: "When does the train leave?", german: "Wann fährt der Zug ab?", focus: "Trennbares Verb · abfahren" },
+      { english: "The train arrives at eight.", german: "Der Zug kommt um acht an.", focus: "Trennbares Verb · ankommen" },
+      { english: "I forgot my keys.", german: "Ich habe meine Schlüssel vergessen.", focus: "Perfekt" },
+      { english: "Did you sleep well?", german: "Hast du gut geschlafen?", focus: "Perfekt · Frage" },
+      { english: "I went to the doctor yesterday.", german: "Ich bin gestern zum Arzt gegangen.", focus: "Perfekt mit sein" },
+      { english: "She bought a new dress.", german: "Sie hat ein neues Kleid gekauft.", focus: "Perfekt · Akkusativ" },
+      { english: "We have already eaten.", german: "Wir haben schon gegessen.", focus: "Perfekt" },
+      { english: "He hasn't come yet.", german: "Er ist noch nicht gekommen.", focus: "Perfekt mit sein · Verneinung" },
+      { english: "I'd like to invite you to dinner.", german: "Ich möchte dich zum Abendessen einladen.", focus: "Modalverb · trennbar" },
+      { english: "Tomorrow I'm going to Munich.", german: "Morgen fahre ich nach München.", focus: "Zukunft · Inversion" },
+      { english: "I'll call you later.", german: "Ich rufe dich später an.", focus: "Trennbares Verb · anrufen" },
+      { english: "What are you doing this weekend?", german: "Was machst du am Wochenende?", focus: "Frage · Zeit" },
+      { english: "I'm meeting friends.", german: "Ich treffe Freunde.", focus: "Präsens" },
+      { english: "I think it's a good idea.", german: "Ich finde, das ist eine gute Idee.", focus: "Meinung" },
+      { english: "I know that he is right.", german: "Ich weiß, dass er recht hat.", focus: "Nebensatz mit dass" },
+      { english: "I'm coming because I have time.", german: "Ich komme, weil ich Zeit habe.", focus: "Nebensatz mit weil" },
+      { english: "When I have time, I read.", german: "Wenn ich Zeit habe, lese ich.", focus: "Nebensatz mit wenn" },
+      { english: "She asked if I would come.", german: "Sie hat gefragt, ob ich kommen würde.", focus: "Indirekte Frage · ob" },
+      { english: "If I had more money, I would travel.", german: "Wenn ich mehr Geld hätte, würde ich reisen.", focus: "Konjunktiv II" },
+      { english: "I would have helped you.", german: "Ich hätte dir geholfen.", focus: "Konjunktiv II Vergangenheit" },
+      { english: "The book I'm reading is interesting.", german: "Das Buch, das ich lese, ist interessant.", focus: "Relativsatz" },
+      { english: "The man you saw is my uncle.", german: "Der Mann, den du gesehen hast, ist mein Onkel.", focus: "Relativsatz · Akkusativ" },
+      { english: "I'm giving the gift to my sister.", german: "Ich gebe meiner Schwester das Geschenk.", focus: "Dativ + Akkusativ" },
+      { english: "She helps her grandmother.", german: "Sie hilft ihrer Großmutter.", focus: "Dativ · helfen" },
+      { english: "Thank you for the gift.", german: "Danke für das Geschenk.", focus: "Präposition · für" },
+      { english: "I'm thinking about you.", german: "Ich denke an dich.", focus: "Präposition · denken an" },
+      { english: "I'm afraid of spiders.", german: "Ich habe Angst vor Spinnen.", focus: "Idiom · vor + Dativ" },
+      { english: "She's interested in music.", german: "Sie interessiert sich für Musik.", focus: "Reflexivverb" },
+      { english: "Don't worry!", german: "Mach dir keine Sorgen!", focus: "Imperativ · Reflexiv" },
+      { english: "Have a nice day!", german: "Schönen Tag noch!", focus: "Verabschiedung" },
+      { english: "See you tomorrow!", german: "Bis morgen!", focus: "Verabschiedung" },
+      { english: "What did you do yesterday?", german: "Was hast du gestern gemacht?", focus: "Perfekt · Frage" },
+      { english: "Where were you?", german: "Wo warst du?", focus: "Präteritum · sein" },
+      { english: "I had a wonderful day.", german: "Ich hatte einen wunderbaren Tag.", focus: "Präteritum · haben" },
+      { english: "The film was boring.", german: "Der Film war langweilig.", focus: "Präteritum · sein" },
+      { english: "I'm tired because I worked a lot.", german: "Ich bin müde, weil ich viel gearbeitet habe.", focus: "Nebensatz · Perfekt" },
+      { english: "Do you want to come along?", german: "Möchtest du mitkommen?", focus: "Modalverb · trennbar" },
+      { english: "She doesn't want to talk about it.", german: "Sie will nicht darüber reden.", focus: "Modalverb · darüber" },
+      { english: "I'm sorry, I'm late.", german: "Es tut mir leid, ich bin spät dran.", focus: "Idiom" },
+      { english: "How do you say that in German?", german: "Wie sagt man das auf Deutsch?", focus: "man · Frage" },
+      { english: "I need to take a break.", german: "Ich muss eine Pause machen.", focus: "Modalverb · Idiom" },
+      { english: "Could you say that again?", german: "Könntest du das noch einmal sagen?", focus: "Konjunktiv II · Höflichkeit" },
+      { english: "I've lived here for three years.", german: "Ich wohne seit drei Jahren hier.", focus: "seit + Dativ · Präsens" },
+      { english: "We saw each other yesterday.", german: "Wir haben uns gestern gesehen.", focus: "Reflexiv · Perfekt" },
+      { english: "Please give me the salt.", german: "Gib mir bitte das Salz.", focus: "Imperativ · Dativ" },
+      { english: "I'm not feeling well today.", german: "Mir geht es heute nicht gut.", focus: "Dativ · es geht" },
+      { english: "He's getting on my nerves.", german: "Er geht mir auf die Nerven.", focus: "Idiom · Dativ" },
+    ];
+
+    // ─── Helpers ────────────────────────────────────────────────────────────
+    function shuffle(arr) {
+      const a = [...arr];
+      for (let i = a.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [a[i], a[j]] = [a[j], a[i]];
+      }
+      return a;
+    }
+    function extractJSONArray(text) {
+      const start = text.indexOf("[");
+      const end = text.lastIndexOf("]");
+      if (start === -1 || end === -1 || end <= start) return null;
+      try { return JSON.parse(text.substring(start, end + 1)); } catch { return null; }
+    }
+
+    // ─── App ────────────────────────────────────────────────────────────────
+    function App() {
+      const [queue, setQueue] = useState(() => shuffle(SEED));
+      const [current, setCurrent] = useState(null);
+      const [history, setHistory] = useState([]);
+      const [historyIndex, setHistoryIndex] = useState(-1);
+      const [revealed, setRevealed] = useState(false);
+      const [generating, setGenerating] = useState(false);
+      const [practiced, setPracticed] = useState(0);
+      const seenRef = useRef(new Set());
+      const generatingRef = useRef(false);
+      const [voices, setVoices] = useState([]);
+      const [selectedVoiceURI, setSelectedVoiceURI] = useState("");
+
+      const drawNext = useCallback(() => {
+        setHistoryIndex((idx) => {
+          if (idx < history.length - 1) {
+            const next = history[idx + 1];
+            setCurrent(next);
+            setRevealed(false);
+            return idx + 1;
+          }
+          setQueue((q) => {
+            let pool = q;
+            if (pool.length === 0) {
+              const unused = SEED.filter((s) => !seenRef.current.has(s.english));
+              pool = shuffle(unused.length > 0 ? unused : (seenRef.current.clear(), SEED));
+            }
+            const [next, ...rest] = pool;
+            seenRef.current.add(next.english);
+            setCurrent(next);
+            setHistory((h) => [...h, next]);
+            setRevealed(false);
+            return rest;
+          });
+          return idx + 1;
+        });
+      }, [history]);
+
+      useEffect(() => { if (!current) drawNext(); /* eslint-disable-next-line */ }, []);
+
+      // Background generation only if user supplied an API key
+      useEffect(() => {
+        const apiKey = window.ANTHROPIC_API_KEY;
+        if (!apiKey || queue.length >= 12 || generatingRef.current) return;
+        generatingRef.current = true;
+        setGenerating(true);
+        (async () => {
+          try {
+            const recent = Array.from(seenRef.current).slice(-30);
+            const res = await fetch("https://api.anthropic.com/v1/messages", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+                "x-api-key": apiKey,
+                "anthropic-version": "2023-06-01",
+                "anthropic-dangerous-direct-browser-access": "true",
+              },
+              body: JSON.stringify({
+                model: "claude-sonnet-4-20250514",
+                max_tokens: 1500,
+                messages: [{
+                  role: "user",
+                  content: `Generate 10 German translation practice sentences for someone studying "German in 32 lessons" by Adrienne (A1–B1, practical everyday German).
+
+REQUIREMENTS:
+- Mix grammar across the batch: Präsens, Modalverben (können, müssen, wollen, möchten, sollen), Perfekt (haben/sein + Partizip II), trennbare Verben, Akkusativ & Dativ, Nebensätze (weil, dass, wenn, ob), Konjunktiv II (würde, hätte, wäre), Relativsätze
+- Use casual "du" form when addressing someone (not Sie)
+- Natural, conversational — what real Germans actually say
+- Vary topics: daily life, work, food, travel, family, hobbies, weather, plans, feelings
+- Keep sentences 5–15 words in English
+- AVOID these recently-used English sentences: ${JSON.stringify(recent)}
+
+Return ONLY a raw JSON array — no markdown fences, no preamble. Each item has:
+- "english": the English sentence
+- "german": the natural German translation
+- "focus": brief 2–4 word grammar/topic label in German
+
+Example:
+[{"english":"I have to leave now.","german":"Ich muss jetzt gehen.","focus":"Modalverb müssen"}]`
+                }]
+              })
+            });
+            if (!res.ok) throw new Error("API " + res.status);
+            const data = await res.json();
+            const text = (data.content || []).map((c) => c.text || "").join("");
+            const parsed = extractJSONArray(text);
+            if (Array.isArray(parsed) && parsed.length > 0) {
+              const valid = parsed
+                .filter((s) => s && typeof s.english === "string" && typeof s.german === "string")
+                .map((s) => ({ english: s.english.trim(), german: s.german.trim(), focus: (s.focus || "").trim() }));
+              if (valid.length > 0) setQueue((q) => [...q, ...shuffle(valid)]);
+            }
+          } catch (err) {
+            const unused = SEED.filter((s) => !seenRef.current.has(s.english));
+            const fill = unused.length > 0 ? shuffle(unused).slice(0, 10) : shuffle(SEED).slice(0, 10);
+            if (unused.length === 0) seenRef.current.clear();
+            setQueue((q) => [...q, ...fill]);
+          } finally {
+            generatingRef.current = false;
+            setGenerating(false);
+          }
+        })();
+      }, [queue.length]);
+
+      // Also refill from seed (no API) when queue empties — keeps it endless without a key
+      useEffect(() => {
+        if (queue.length >= 12) return;
+        if (window.ANTHROPIC_API_KEY) return; // API path handles it
+        const unused = SEED.filter((s) => !seenRef.current.has(s.english));
+        const fill = unused.length > 0 ? shuffle(unused).slice(0, 20) : (seenRef.current.clear(), shuffle(SEED).slice(0, 20));
+        setQueue((q) => [...q, ...fill]);
+      }, [queue.length]);
+
+      // iPhone/Safari often loads voices asynchronously. Keep the list updated,
+      // then explicitly choose the best installed German voice instead of letting
+      // the browser fall back to a low-quality default.
+      useEffect(() => {
+        if (typeof window === "undefined" || !window.speechSynthesis) return;
+
+        const loadVoices = () => {
+          const all = window.speechSynthesis.getVoices();
+          const german = all
+            .filter((v) => v.lang && v.lang.toLowerCase().startsWith("de"))
+            .sort((a, b) => {
+              const score = (v) => {
+                const name = (v.name || "").toLowerCase();
+                let points = 0;
+                if (v.lang === "de-DE") points += 20;
+                if (name.includes("siri")) points += 12;
+                if (name.includes("premium")) points += 10;
+                if (name.includes("enhanced")) points += 8;
+                if (name.includes("anna")) points += 6;
+                if (name.includes("compact")) points -= 10;
+                return points;
+              };
+              return score(b) - score(a);
+            });
+
+          setVoices(german);
+          setSelectedVoiceURI((current) => current || (german[0] && german[0].voiceURI) || "");
+        };
+
+        loadVoices();
+        window.speechSynthesis.onvoiceschanged = loadVoices;
+
+        // Safari sometimes needs a second nudge after page load.
+        const timer = setTimeout(loadVoices, 500);
+        return () => {
+          clearTimeout(timer);
+          if (window.speechSynthesis.onvoiceschanged === loadVoices) {
+            window.speechSynthesis.onvoiceschanged = null;
+          }
+        };
+      }, []);
+
+      const getPreferredGermanVoice = useCallback(() => {
+        if (typeof window === "undefined" || !window.speechSynthesis) return null;
+        const all = window.speechSynthesis.getVoices();
+        const selected = all.find((v) => v.voiceURI === selectedVoiceURI);
+        if (selected) return selected;
+
+        return all.find((v) => v.lang === "de-DE" && /siri|premium|enhanced|anna/i.test(v.name || ""))
+          || all.find((v) => v.lang === "de-DE")
+          || all.find((v) => v.lang && v.lang.toLowerCase().startsWith("de"))
+          || null;
+      }, [selectedVoiceURI]);
+
+      const speakGerman = useCallback((text) => {
+        if (typeof window === "undefined" || !window.speechSynthesis) return;
+        try {
+          window.speechSynthesis.cancel();
+          const u = new SpeechSynthesisUtterance(text);
+          const voice = getPreferredGermanVoice();
+          if (voice) {
+            u.voice = voice;
+            u.lang = voice.lang || "de-DE";
+          } else {
+            u.lang = "de-DE";
+          }
+          u.rate = 0.88;
+          u.pitch = 1.0;
+          window.speechSynthesis.speak(u);
+        } catch {}
+      }, [getPreferredGermanVoice]);
+
+      const reveal = useCallback(() => {
+        if (revealed) return;
+        setRevealed(true);
+        if (current) setTimeout(() => speakGerman(current.german), 200);
+      }, [revealed, current, speakGerman]);
+
+      const next = useCallback(() => {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        setPracticed((p) => p + 1);
+        drawNext();
+      }, [drawNext]);
+
+      const previous = useCallback(() => {
+        if (window.speechSynthesis) window.speechSynthesis.cancel();
+        if (historyIndex > 0) {
+          const prev = history[historyIndex - 1];
+          setHistoryIndex(historyIndex - 1);
+          setCurrent(prev);
+          setRevealed(true);
+        }
+      }, [historyIndex, history]);
+
+      useEffect(() => {
+        const handler = (e) => {
+          const tag = (e.target && e.target.tagName) || "";
+          if (tag === "INPUT" || tag === "TEXTAREA") return;
+          if (e.code === "Space") { e.preventDefault(); if (revealed) next(); else reveal(); }
+          else if (e.key === "Enter" || e.key === "ArrowRight") { e.preventDefault(); next(); }
+          else if (e.key === "ArrowLeft") { e.preventDefault(); previous(); }
+          else if (e.key === "r" || e.key === "R") {
+            if (revealed && current) speakGerman(current.german); else reveal();
+          }
+        };
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+      }, [revealed, next, reveal, previous, current, speakGerman]);
+
+      const keyConfigured = !!window.ANTHROPIC_API_KEY;
+
+      return (
+        <div className="min-h-screen w-full flex flex-col"
+          style={{
+            backgroundColor: "#EFE7D4",
+            color: "#1C1815",
+            fontFamily: '"Manrope", ui-sans-serif, system-ui, sans-serif',
+            backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(178,58,47,0.06), transparent 60%), radial-gradient(ellipse 80% 50% at 50% 110%, rgba(28,24,21,0.04), transparent 60%)",
+          }}>
+
+          <header className="px-6 sm:px-10 pt-6 pb-2 flex items-center justify-between fadein">
+            <div className="flex items-center gap-3">
+              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: "#B23A2F" }} title={generating ? "generating more…" : "ready"} />
+              <div className="text-[11px] uppercase tracking-[0.22em]" style={{ color: "#6B6157" }}>
+                Deutsch <span className="mx-1">·</span> 32
+              </div>
+            </div>
+            <div className="text-[11px] uppercase tracking-[0.22em] num" style={{ color: "#6B6157" }}>
+              <span style={{ color: "#1C1815", fontWeight: 600 }}>{practiced}</span>
+              <span className="mx-2">·</span>practiced
+            </div>
+          </header>
+
+          <main className="flex-1 flex items-center justify-center px-6 sm:px-10 py-8">
+            <div className="w-full max-w-2xl" key={current ? current.english : "loading"}>
+              {current ? (
+                <>
+                  <div className="flex items-center gap-3 mb-6 rise">
+                    <div className="h-px flex-shrink-0 w-8" style={{ backgroundColor: "#1C1815", opacity: 0.4 }} />
+                    <div className="text-[10px] sm:text-[11px] uppercase tracking-[0.28em]" style={{ color: "#6B6157" }}>
+                      {current.focus || "Übung"}
+                    </div>
+                  </div>
+
+                  <h1 className="serif rise text-3xl sm:text-5xl md:text-6xl leading-[1.1] font-medium"
+                    style={{ letterSpacing: "-0.015em", color: "#1C1815", fontVariationSettings: '"SOFT" 50, "WONK" 0, "opsz" 100' }}>
+                    {current.english}
+                  </h1>
+
+                  <div className="my-8 sm:my-10 h-px w-24 drawline" style={{ backgroundColor: "#1C1815", opacity: 0.25 }} />
+
+                  {revealed ? (
+                    <div className="rise">
+                      <div className="flex items-start gap-4">
+                        <p className="serif italic flex-1 text-2xl sm:text-4xl md:text-5xl leading-[1.15] font-normal"
+                          style={{ letterSpacing: "-0.01em", color: "#B23A2F", fontVariationSettings: '"SOFT" 100, "opsz" 100' }}>
+                          {current.german}
+                        </p>
+                        <button onClick={() => speakGerman(current.german)} className="speaker mt-2 sm:mt-4 flex-shrink-0"
+                          style={{ color: "#B23A2F" }} aria-label="Hear German pronunciation" title="Hear it (R)">
+                          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M11 5L6 9H2v6h4l5 4V5z" />
+                            <path d="M15.54 8.46a5 5 0 010 7.07" />
+                            <path d="M19.07 4.93a10 10 0 010 14.14" />
+                          </svg>
+                        </button>
+                      </div>
+
+                      <div className="mt-10 flex items-center gap-4 flex-wrap">
+                        <button onClick={next} className="btn-primary px-7 py-3.5 text-[13px] uppercase tracking-[0.18em] font-medium" autoFocus>
+                          Next<span className="ml-3 opacity-60">→</span>
+                        </button>
+                        {historyIndex > 0 && (
+                          <button onClick={previous} className="btn-ghost px-5 py-3 text-[12px] uppercase tracking-[0.18em] font-medium border-b"
+                            style={{ borderColor: "rgba(28,24,21,0.3)", color: "#6B6157" }}>← Previous</button>
+                        )}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="rise">
+                      <button onClick={reveal} className="btn-primary px-7 py-3.5 text-[13px] uppercase tracking-[0.18em] font-medium" autoFocus>
+                        Show Answer
+                      </button>
+                      <p className="mt-6 text-sm italic" style={{ color: "#6B6157", fontFamily: '"Fraunces", serif' }}>
+                        Say it aloud first, then reveal.
+                      </p>
+                    </div>
+                  )}
+                </>
+              ) : (
+                <div className="text-center" style={{ color: "#6B6157" }}>Lade…</div>
+              )}
+            </div>
+          </main>
+
+          <footer className="px-6 sm:px-10 pb-6 pt-2 fadein">
+            <div className="flex items-center justify-between gap-4 flex-wrap text-[11px]" style={{ color: "#6B6157" }}>
+              <div className="flex items-center gap-4 flex-wrap">
+                <span className="flex items-center gap-1.5"><kbd>Space</kbd><span>reveal / next</span></span>
+                <span className="flex items-center gap-1.5"><kbd>R</kbd><span>hear it</span></span>
+                <span className="flex items-center gap-1.5"><kbd>←</kbd><span>previous</span></span>
+              </div>
+              <div className="flex items-center gap-3 flex-wrap">
+                {voices.length > 0 ? (
+                  <>
+                    <span className="uppercase tracking-[0.22em]" style={{ opacity: 0.7 }}>Voice</span>
+                    <select
+                      className="voice-select"
+                      value={selectedVoiceURI}
+                      onChange={(e) => setSelectedVoiceURI(e.target.value)}
+                      aria-label="German voice"
+                    >
+                      {voices.map((v) => (
+                        <option key={v.voiceURI} value={v.voiceURI}>{v.name} · {v.lang}</option>
+                      ))}
+                    </select>
+                  </>
+                ) : (
+                  <span className="uppercase tracking-[0.22em]" style={{ opacity: 0.7 }}>No German voice found yet</span>
+                )}
+                <div className="uppercase tracking-[0.22em] num" style={{ opacity: 0.7 }}>
+                  {generating ? "preparing more…" : (keyConfigured ? `queue: ${queue.length}` : `${SEED.length} sentences · reshuffled`)}
+                </div>
+              </div>
+            </div>
+          </footer>
+        </div>
+      );
+    }
+
+    const root = ReactDOM.createRoot(document.getElementById('root'));
+    root.render(<App />);
+  </script>
+</body>
+</html>
