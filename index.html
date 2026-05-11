@@ -149,6 +149,10 @@
   const getKey  = () => localStorage.getItem("d32_key") || "";
   const saveKey = (k) => k ? localStorage.setItem("d32_key", k) : localStorage.removeItem("d32_key");
 
+  // Voice preference
+  const getVoiceName  = () => localStorage.getItem("d32_voice") || "";
+  const saveVoiceName = (n) => n ? localStorage.setItem("d32_voice", n) : localStorage.removeItem("d32_voice");
+
   // Persist generated sets across sessions
   const SETS_KEY = "d32_sets";
   function loadSets() {
@@ -246,56 +250,54 @@ Each item: {"english":"...","german":"...","focus":"..."}`,
     URL.revokeObjectURL(url);
   }
 
-  // Pick the best available German voice.
-  // Priority: Enhanced/Premium > named "Anna" > any de-DE > any de-*.
-  // On iOS, voices load async — we retry up to 20 times (2s) if none are ready yet.
+  // Returns all German voices available in this browser
+  function getGermanVoices() {
+    return window.speechSynthesis
+      ? window.speechSynthesis.getVoices().filter((v) => v.lang?.toLowerCase().startsWith("de"))
+      : [];
+  }
+
+  // Pick the best German voice, respecting any saved user preference
   function pickGermanVoice(voices) {
     const de = voices.filter((v) => v.lang?.toLowerCase().startsWith("de"));
     if (de.length === 0) return null;
-    const priority = [
-      de.find((v) => /enhanced|premium/i.test(v.name)),
-      de.find((v) => /anna/i.test(v.name)),
-      de.find((v) => v.lang?.toLowerCase() === "de-de"),
-      de[0],
-    ];
-    return priority.find(Boolean) || null;
+    const saved = getVoiceName();
+    if (saved) {
+      const preferred = de.find((v) => v.name === saved);
+      if (preferred) return preferred;
+    }
+    // Auto fallback priority: Enhanced/Premium > Anna > de-DE > first German
+    return (
+      de.find((v) => /enhanced|premium/i.test(v.name)) ||
+      de.find((v) => /anna/i.test(v.name)) ||
+      de.find((v) => v.lang?.toLowerCase() === "de-de") ||
+      de[0]
+    );
   }
 
   function speakGerman(text) {
     if (!window.speechSynthesis) return;
     try { window.speechSynthesis.cancel(); } catch {}
-
     function attempt(retriesLeft) {
       const voices = window.speechSynthesis.getVoices();
       const voice  = pickGermanVoice(voices);
-
-      if (!voice && retriesLeft > 0) {
-        // Voices not loaded yet (common on iOS Safari) — wait and retry
-        setTimeout(() => attempt(retriesLeft - 1), 100);
-        return;
-      }
-
+      if (!voice && retriesLeft > 0) { setTimeout(() => attempt(retriesLeft - 1), 100); return; }
       try {
         const u = new SpeechSynthesisUtterance(text);
-        u.lang = "de-DE";
-        u.rate = 0.92;
+        u.lang = "de-DE"; u.rate = 0.92;
         if (voice) u.voice = voice;
         window.speechSynthesis.speak(u);
       } catch {}
     }
-
-    attempt(20); // retry up to 20 × 100ms = 2 seconds
+    attempt(20);
   }
 
-  // Warm up the voice engine on first user interaction so voices are
-  // pre-loaded by the time the first answer is revealed (iOS requirement).
+  // Warm up iOS voice engine on first interaction
   let voicesWarmedUp = false;
   function warmUpVoices() {
     if (voicesWarmedUp || !window.speechSynthesis) return;
     voicesWarmedUp = true;
-    // Trigger voice list load
     window.speechSynthesis.getVoices();
-    // Also hook the onvoiceschanged event so the list is cached
     window.speechSynthesis.onvoiceschanged = () => window.speechSynthesis.getVoices();
   }
 
@@ -352,9 +354,25 @@ Each item: {"english":"...","german":"...","focus":"..."}`,
 
   // ── Settings modal ─────────────────────────────────────────────────────
   function SettingsModal({ onClose, onSaved }) {
-    const [tab, setTab] = useState("key");
-    const [key, setKey] = useState(getKey);
-    const [saved, setSaved] = useState(false);
+    const [tab, setTab]       = useState("key");
+    const [key, setKey]       = useState(getKey);
+    const [saved, setSaved]   = useState(false);
+    const [voices, setVoices] = useState([]);
+    const [selectedVoice, setSelectedVoice] = useState(getVoiceName);
+    const [testPlaying, setTestPlaying] = useState(false);
+
+    // Load available German voices when the Voice tab is opened
+    useEffect(() => {
+      if (tab !== "voice") return;
+      function load() {
+        const v = getGermanVoices();
+        if (v.length > 0) setVoices(v);
+        else setTimeout(load, 200);
+      }
+      load();
+      if (window.speechSynthesis)
+        window.speechSynthesis.onvoiceschanged = () => setVoices(getGermanVoices());
+    }, [tab]);
 
     const save = () => {
       saveKey(key.trim());
@@ -362,21 +380,40 @@ Each item: {"english":"...","german":"...","focus":"..."}`,
       setTimeout(() => { setSaved(false); onSaved(key.trim()); onClose(); }, 700);
     };
 
+    const saveVoice = (name) => {
+      setSelectedVoice(name);
+      saveVoiceName(name);
+    };
+
+    const testVoice = (voiceName) => {
+      if (!window.speechSynthesis) return;
+      setTestPlaying(true);
+      window.speechSynthesis.cancel();
+      const v = window.speechSynthesis.getVoices().find((v) => v.name === voiceName);
+      const u = new SpeechSynthesisUtterance("Guten Morgen! Wie geht es dir?");
+      u.lang = "de-DE"; u.rate = 0.92;
+      if (v) u.voice = v;
+      u.onend = () => setTestPlaying(false);
+      u.onerror = () => setTestPlaying(false);
+      window.speechSynthesis.speak(u);
+    };
+
     return (
       <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
-        <div className="modal-box" style={{ maxWidth: 480 }}>
+        <div className="modal-box" style={{ maxWidth: 500 }}>
           <div className="modal-header">
             <div>
               <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1815" }}>Settings</div>
-              <div style={{ fontSize: 11, color: "#6B6157", marginTop: 3 }}>Anthropic API key</div>
+              <div style={{ fontSize: 11, color: "#6B6157", marginTop: 3 }}>API key · Voice</div>
             </div>
             <button className="icon-btn" style={{ color: "#6B6157" }} onClick={onClose}><Ico.Close /></button>
           </div>
 
           <div className="modal-body">
             <div className="tab-bar">
-              <button className={`tab-item ${tab === "key" ? "active" : ""}`} onClick={() => setTab("key")}>API Key</button>
-              <button className={`tab-item ${tab === "help" ? "active" : ""}`} onClick={() => setTab("help")}>How to get one</button>
+              <button className={`tab-item ${tab === "key"   ? "active" : ""}`} onClick={() => setTab("key")}>API Key</button>
+              <button className={`tab-item ${tab === "voice" ? "active" : ""}`} onClick={() => setTab("voice")}>Voice</button>
+              <button className={`tab-item ${tab === "help"  ? "active" : ""}`} onClick={() => setTab("help")}>Help</button>
             </div>
 
             {tab === "key" && (
@@ -394,27 +431,111 @@ Each item: {"english":"...","german":"...","focus":"..."}`,
               </div>
             )}
 
+            {tab === "voice" && (
+              <div>
+                <p style={{ fontSize: 11, color: "#6B6157", marginBottom: 14, lineHeight: 1.7 }}>
+                  These are the German voices your browser can actually use.
+                  Tap a row to select it, then tap <strong>▶ Test</strong> to hear it.
+                  Your choice is saved automatically.
+                </p>
+                {voices.length === 0 ? (
+                  <p style={{ fontSize: 12, color: "#6B6157", fontStyle: "italic" }}>
+                    Loading voices… (try tapping the Voice tab again if this persists)
+                  </p>
+                ) : (
+                  <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>
+                    {/* Auto option */}
+                    <div
+                      onClick={() => saveVoice("")}
+                      style={{
+                        display: "flex", alignItems: "center", justifyContent: "space-between",
+                        padding: "10px 12px", borderRadius: 4, cursor: "pointer",
+                        border: `1px solid ${selectedVoice === "" ? "#1C1815" : "rgba(28,24,21,0.15)"}`,
+                        background: selectedVoice === "" ? "rgba(28,24,21,0.06)" : "rgba(255,255,255,0.4)",
+                        transition: "all 150ms",
+                      }}
+                    >
+                      <div>
+                        <div style={{ fontSize: 12, fontWeight: 600, color: "#1C1815" }}>Auto (recommended)</div>
+                        <div style={{ fontSize: 11, color: "#6B6157", marginTop: 2 }}>Prefers Enhanced → Anna → de-DE</div>
+                      </div>
+                      {selectedVoice === "" && <span style={{ fontSize: 13, color: "#2D7A4F", fontWeight: 700 }}>✓</span>}
+                    </div>
+
+                    {/* One row per voice */}
+                    {voices.map((v) => (
+                      <div key={v.name}
+                        onClick={() => saveVoice(v.name)}
+                        style={{
+                          display: "flex", alignItems: "center", justifyContent: "space-between",
+                          padding: "10px 12px", borderRadius: 4, cursor: "pointer",
+                          border: `1px solid ${selectedVoice === v.name ? "#B23A2F" : "rgba(28,24,21,0.15)"}`,
+                          background: selectedVoice === v.name ? "rgba(178,58,47,0.06)" : "rgba(255,255,255,0.4)",
+                          transition: "all 150ms",
+                        }}
+                      >
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontSize: 12, fontWeight: 600, color: "#1C1815", whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>
+                            {v.name}
+                          </div>
+                          <div style={{ fontSize: 11, color: "#6B6157", marginTop: 2 }}>
+                            {v.lang}{v.localService ? " · on-device" : " · network"}
+                          </div>
+                        </div>
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0, marginLeft: 10 }}>
+                          <button
+                            onClick={(e) => { e.stopPropagation(); testVoice(v.name); }}
+                            disabled={testPlaying}
+                            style={{
+                              background: "none", border: "1px solid rgba(28,24,21,0.2)", cursor: "pointer",
+                              padding: "3px 8px", borderRadius: 3, fontSize: 11, fontWeight: 600,
+                              color: "#6B6157", fontFamily: "Manrope, sans-serif",
+                              opacity: testPlaying ? 0.4 : 1,
+                            }}
+                          >▶ Test</button>
+                          {selectedVoice === v.name && <span style={{ fontSize: 13, color: "#B23A2F", fontWeight: 700 }}>✓</span>}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             {tab === "help" && (
               <div style={{ fontSize: 12, color: "#1C1815", lineHeight: 1.85 }}>
-                <ol style={{ paddingLeft: 18, margin: 0 }}>
+                <p style={{ fontWeight: 700, marginBottom: 6 }}>API Key</p>
+                <ol style={{ paddingLeft: 18, margin: "0 0 14px" }}>
                   <li>Go to <strong>console.anthropic.com</strong></li>
                   <li>Sign up or log in (free)</li>
                   <li>Click <strong>API Keys</strong> in the sidebar</li>
                   <li>Click <strong>Create Key</strong> → copy it</li>
                   <li>Paste it in the API Key tab and save</li>
                 </ol>
-                <p style={{ marginTop: 12, fontSize: 11, color: "#6B6157" }}>
-                  Each set of 30 sentences costs roughly $0.01–0.02 USD.
+                <p style={{ fontSize: 11, color: "#6B6157" }}>Each set of 30 sentences costs roughly $0.01–0.02 USD.</p>
+                <p style={{ fontWeight: 700, marginBottom: 6, marginTop: 14 }}>Voice quality on iPhone</p>
+                <p style={{ fontSize: 11, color: "#6B6157", lineHeight: 1.7 }}>
+                  Safari on iOS only exposes a limited set of voices to web apps — the Enhanced voices
+                  in System Settings are not available to browsers. Go to the <strong>Voice tab</strong> to
+                  see what's actually available and pick the best one. On-device voices generally sound
+                  better than network voices.
                 </p>
               </div>
             )}
           </div>
 
           <div className="modal-footer">
-            <button className="btn-primary"
-              style={{ padding: "8px 18px", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}
-              onClick={save}>{saved ? "Saved ✓" : "Save key"}</button>
-            {key && <button className="btn-sm" onClick={() => { setKey(""); saveKey(""); }}>Clear</button>}
+            {tab === "key" && <>
+              <button className="btn-primary"
+                style={{ padding: "8px 18px", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}
+                onClick={save}>{saved ? "Saved ✓" : "Save key"}</button>
+              {key && <button className="btn-sm" onClick={() => { setKey(""); saveKey(""); }}>Clear</button>}
+            </>}
+            {tab === "voice" && (
+              <p style={{ fontSize: 11, color: "#6B6157" }}>
+                Selection saved automatically. Close to apply.
+              </p>
+            )}
           </div>
         </div>
       </div>
