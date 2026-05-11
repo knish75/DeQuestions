@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Deutsch · 32</title>
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-title" content="Deutsch · 32" />
+  <meta name="theme-color" content="#EFE7D4" />
+
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300..900;1,9..144,300..900&family=Manrope:wght@300;400;500;600;700&display=swap" rel="stylesheet" />
+
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js" crossorigin></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js" crossorigin></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/@babel/standalone@7/babel.min.js"></script>
+
+  <style>
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; background: #EFE7D4; -webkit-font-smoothing: antialiased; }
+    body { padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+
+    .serif { font-family: 'Fraunces', 'Iowan Old Style', Georgia, serif; font-optical-sizing: auto; }
+
+    @keyframes riseIn   { from { opacity:0; transform:translateY(14px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeIn   { from { opacity:0; } to { opacity:1; } }
+    @keyframes drawLine { from { transform:scaleX(0); } to { transform:scaleX(1); } }
+    @keyframes spin     { to { transform:rotate(360deg); } }
+    @keyframes pulse    { 0%,100% { opacity:1; } 50% { opacity:.35; } }
+    @keyframes slideUp  { from { opacity:0; transform:translateY(16px); } to { opacity:1; transform:translateY(0); } }
+
+    .rise     { animation: riseIn   0.48s cubic-bezier(0.2,0.8,0.2,1) both; }
+    .fadein   { animation: fadeIn   0.35s ease-out both; }
+    .drawline { animation: drawLine 0.55s cubic-bezier(0.2,0.8,0.2,1) both; transform-origin: left center; }
+
+    .btn-primary {
+      background: #1C1815; color: #EFE7D4; border: none; cursor: pointer;
+      display: inline-flex; align-items: center; gap: 7px; font-family: 'Manrope', sans-serif;
+      transition: background 160ms ease, letter-spacing 200ms ease, transform 120ms ease;
+    }
+    .btn-primary:hover  { background: #B23A2F; letter-spacing: 0.04em; }
+    .btn-primary:active { transform: translateY(1px); }
+    .btn-primary:disabled { opacity: 0.38; cursor: not-allowed; letter-spacing: normal; background: #1C1815; }
+
+    .btn-sm {
+      background: none; border: 1px solid rgba(28,24,21,0.2); cursor: pointer;
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 11px; border-radius: 4px; font-family: 'Manrope', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      transition: border-color 150ms, color 150ms, background 150ms; color: #6B6157;
+    }
+    .btn-sm:hover { border-color: #1C1815; color: #1C1815; background: rgba(255,255,255,0.25); }
+
+    .btn-ghost {
+      background: none; border: none; cursor: pointer; font-family: 'Manrope', sans-serif;
+      transition: color 150ms;
+    }
+    .btn-ghost:hover   { color: #B23A2F !important; }
+    .btn-ghost:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .icon-btn {
+      background: none; border: none; cursor: pointer; padding: 4px;
+      display: inline-flex; align-items: center; transition: transform 180ms, color 180ms;
+    }
+    .icon-btn:hover  { transform: scale(1.12); color: #B23A2F !important; }
+    .icon-btn:active { transform: scale(0.92); }
+
+    .set-tab {
+      background: none; border: none; cursor: pointer; white-space: nowrap;
+      padding: 5px 12px; border-radius: 20px; font-family: 'Manrope', sans-serif;
+      font-size: 11px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase;
+      transition: background 150ms, color 150ms;
+    }
+    .set-tab.active           { background: #1C1815; color: #EFE7D4; }
+    .set-tab:not(.active)     { color: #6B6157; }
+    .set-tab:not(.active):hover { color: #1C1815; background: rgba(255,255,255,0.3); }
+
+    .progress-bar  { height: 2px; background: rgba(28,24,21,0.1); border-radius: 1px; overflow: hidden; }
+    .progress-fill { height: 100%; background: #B23A2F; border-radius: 1px; transition: width 350ms ease; }
+
+    .generating-dots::after { content: '...'; animation: pulse 1.2s ease-in-out infinite; }
+    .num { font-variant-numeric: tabular-nums; }
+
+    kbd {
+      font-family: 'Manrope', sans-serif; font-size: 11px; font-weight: 500;
+      padding: 2px 6px; border: 1px solid rgba(28,24,21,0.25); border-bottom-width: 2px;
+      border-radius: 4px; background: rgba(255,255,255,0.4); color: #1C1815;
+    }
+
+    ::-webkit-scrollbar { width: 4px; height: 4px; }
+    ::-webkit-scrollbar-thumb { background: rgba(28,24,21,0.2); border-radius: 2px; }
+
+    /* Modals */
+    .modal-overlay {
+      position: fixed; inset: 0; background: rgba(28,24,21,0.52); z-index: 50;
+      display: flex; align-items: center; justify-content: center; padding: 20px;
+    }
+    .modal-box {
+      background: #EFE7D4; border-radius: 6px; width: 100%;
+      box-shadow: 0 12px 48px rgba(0,0,0,0.28);
+      display: flex; flex-direction: column; max-height: 84vh;
+      animation: slideUp 0.3s cubic-bezier(0.2,0.8,0.2,1) both;
+    }
+    .modal-header {
+      padding: 16px 20px 13px; border-bottom: 1px solid rgba(28,24,21,0.1);
+      display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; flex-shrink: 0;
+    }
+    .modal-body   { flex: 1; overflow-y: auto; padding: 16px 20px; }
+    .modal-footer { padding: 0 20px 18px; display: flex; align-items: center; gap: 10px; flex-shrink: 0; }
+
+    .tab-bar { display: flex; border-bottom: 1px solid rgba(28,24,21,0.1); margin-bottom: 14px; }
+    .tab-item {
+      background: none; border: none; cursor: pointer; font-family: 'Manrope', sans-serif;
+      padding: 8px 14px; font-size: 11px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase;
+      color: #6B6157; border-bottom: 2px solid transparent; margin-bottom: -1px;
+      transition: color 150ms, border-color 150ms;
+    }
+    .tab-item.active { color: #1C1815; border-bottom-color: #B23A2F; }
+
+    .key-input {
+      width: 100%; padding: 10px 12px; border-radius: 4px;
+      border: 1px solid rgba(28,24,21,0.2); background: rgba(255,255,255,0.6);
+      font-family: 'Menlo','Monaco','Courier New', monospace; font-size: 12px;
+      color: #1C1815; outline: none; transition: border-color 150ms;
+    }
+    .key-input:focus { border-color: #B23A2F; }
+
+    .json-area {
+      width: 100%; padding: 11px; border-radius: 4px; min-height: 180px;
+      border: 1px solid rgba(28,24,21,0.15); background: rgba(255,255,255,0.5);
+      font-family: 'Menlo','Monaco','Courier New', monospace; font-size: 11px; line-height: 1.65;
+      color: #1C1815; resize: none; outline: none;
+    }
+
+    .divider { display: flex; align-items: center; gap: 12px; margin: 14px 0 12px; }
+    .divider-line { flex: 1; height: 1px; background: rgba(28,24,21,0.12); }
+    .divider-text { font-size: 11px; color: #6B6157; font-family: 'Manrope', sans-serif; }
+  </style>
+</head>
+<body>
+<div id="root"></div>
+
+<script type="text/babel" data-presets="react">
+  const { useState, useEffect, useRef, useCallback } = React;
+
+  // ── API key ────────────────────────────────────────────────────────────
+  const getKey  = () => localStorage.getItem("d32_key") || "";
+  const saveKey = (k) => k ? localStorage.setItem("d32_key", k) : localStorage.removeItem("d32_key");
+
+  // Persist generated sets across sessions
+  const SETS_KEY = "d32_sets";
+  function loadSets() {
+    try {
+      const raw = localStorage.getItem(SETS_KEY);
+      if (!raw) return [];
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch { return []; }
+  }
+  function saveSets(sets) {
+    try { localStorage.setItem(SETS_KEY, JSON.stringify(sets)); } catch {}
+  }
+  function clearSavedSets() {
+    localStorage.removeItem(SETS_KEY);
+  }
+
+  // ── Core helpers ───────────────────────────────────────────────────────
+  function extractJSONArray(text) {
+    const s = text.indexOf("["), e = text.lastIndexOf("]");
+    if (s === -1 || e === -1 || e <= s) return null;
+    try { return JSON.parse(text.substring(s, e + 1)); } catch { return null; }
+  }
+
+  async function generateSet(apiKey, allPrevious) {
+    const recent = allPrevious.map((s) => s.english).slice(-60);
+    const res = await fetch("https://api.anthropic.com/v1/messages", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "x-api-key": apiKey,
+        "anthropic-version": "2023-06-01",
+        "anthropic-dangerous-direct-browser-access": "true",
+      },
+      body: JSON.stringify({
+        model: "claude-sonnet-4-6",
+        max_tokens: 3000,
+        messages: [{
+          role: "user",
+          content: `Generate exactly 30 German translation practice sentences for someone studying "German in 32 lessons" by Adrienne (A1–B1, practical everyday German).
+
+REQUIREMENTS:
+- Spread grammar evenly: Präsens, Modalverben (können/müssen/wollen/möchten/sollen), Perfekt with haben, Perfekt with sein, trennbare Verben, Akkusativ, Dativ, Nebensätze (weil/dass/wenn/ob), Konjunktiv II, Relativsätze
+- Casual "du" form, never Sie. Natural, conversational German.
+- Varied topics: greetings, daily routine, food & drink, work, transport, weather, shopping, family, hobbies, health, travel, feelings, plans
+- 5–15 words in English per sentence
+- AVOID these already-used sentences: ${JSON.stringify(recent)}
+
+Return ONLY a raw JSON array, no markdown, no preamble.
+Each item: {"english":"...","german":"...","focus":"..."}`,
+        }],
+      }),
+    });
+    if (!res.ok) {
+      const body = await res.text().catch(() => "");
+      throw new Error(`API ${res.status}${body ? ": " + body.slice(0, 160) : ""}`);
+    }
+    const data = await res.json();
+    const text = (data.content || []).map((c) => c.text || "").join("");
+    const parsed = extractJSONArray(text);
+    if (!Array.isArray(parsed) || parsed.length === 0) throw new Error("No sentences in response");
+    return parsed
+      .filter((s) => s?.english && s?.german)
+      .map((s) => ({ english: s.english.trim(), german: s.german.trim(), focus: (s.focus || "").trim() }))
+      .slice(0, 30);
+  }
+
+  function parseSetsFromJSON(raw) {
+    if (!Array.isArray(raw) || raw.length === 0) throw new Error("Empty or invalid JSON");
+    const isNested = Array.isArray(raw[0]);
+    const flat = isNested ? raw.flat() : raw;
+    const valid = flat
+      .filter((s) => s && typeof s.english === "string" && typeof s.german === "string")
+      .map((s) => ({ english: s.english.trim(), german: s.german.trim(), focus: (s.focus || "").trim() }));
+    if (valid.length === 0) throw new Error("No valid sentences found");
+    if (isNested) {
+      let i = 0;
+      return raw.map((set) => { const c = valid.slice(i, i + set.length); i += set.length; return c; }).filter((s) => s.length > 0);
+    }
+    const sets = [];
+    for (let i = 0; i < valid.length; i += 30) sets.push(valid.slice(i, i + 30));
+    return sets;
+  }
+
+  // Real blob download — works fine outside Claude.ai sandbox (e.g. Netlify)
+  function downloadJSON(sets) {
+    const blob = new Blob([JSON.stringify(sets, null, 2)], { type: "application/json" });
+    const url  = URL.createObjectURL(blob);
+    const a    = document.createElement("a");
+    a.href = url;
+    a.download = `deutsch32-${new Date().toISOString().slice(0, 10)}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }
+
+  function speakGerman(text) {
+    if (!window.speechSynthesis) return;
+    try {
+      window.speechSynthesis.cancel();
+      const u = new SpeechSynthesisUtterance(text);
+      u.lang = "de-DE"; u.rate = 0.92;
+      const de = window.speechSynthesis.getVoices().find((v) => v.lang?.toLowerCase().startsWith("de"));
+      if (de) u.voice = de;
+      window.speechSynthesis.speak(u);
+    } catch {}
+  }
+
+  // ── SVG Icons ──────────────────────────────────────────────────────────
+  const Ico = {
+    Refresh: ({ spin: s }) => (
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round"
+        style={{ animation: s ? "spin 1s linear infinite" : "none", flexShrink: 0 }}>
+        <path d="M21 12a9 9 0 11-3-6.7L21 8"/><path d="M21 3v5h-5"/>
+      </svg>
+    ),
+    Volume: () => (
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M11 5L6 9H2v6h4l5 4V5z"/>
+        <path d="M15.54 8.46a5 5 0 010 7.07"/>
+        <path d="M19.07 4.93a10 10 0 010 14.14"/>
+      </svg>
+    ),
+    Download: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
+      </svg>
+    ),
+    Upload: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
+        <polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/>
+      </svg>
+    ),
+    Key: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 11-7.778 7.778 5.5 5.5 0 017.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+      </svg>
+    ),
+    Copy: () => (
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <rect x="9" y="9" width="13" height="13" rx="2"/>
+        <path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>
+      </svg>
+    ),
+    Close: () => (
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    ),
+    Shuffle: () => (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{flexShrink:0}}>
+        <polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/>
+        <polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/>
+      </svg>
+    ),
+  };
+
+  // ── Settings modal ─────────────────────────────────────────────────────
+  function SettingsModal({ onClose, onSaved }) {
+    const [tab, setTab] = useState("key");
+    const [key, setKey] = useState(getKey);
+    const [saved, setSaved] = useState(false);
+
+    const save = () => {
+      saveKey(key.trim());
+      setSaved(true);
+      setTimeout(() => { setSaved(false); onSaved(key.trim()); onClose(); }, 700);
+    };
+
+    return (
+      <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="modal-box" style={{ maxWidth: 480 }}>
+          <div className="modal-header">
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1815" }}>Settings</div>
+              <div style={{ fontSize: 11, color: "#6B6157", marginTop: 3 }}>Anthropic API key</div>
+            </div>
+            <button className="icon-btn" style={{ color: "#6B6157" }} onClick={onClose}><Ico.Close /></button>
+          </div>
+
+          <div className="modal-body">
+            <div className="tab-bar">
+              <button className={`tab-item ${tab === "key" ? "active" : ""}`} onClick={() => setTab("key")}>API Key</button>
+              <button className={`tab-item ${tab === "help" ? "active" : ""}`} onClick={() => setTab("help")}>How to get one</button>
+            </div>
+
+            {tab === "key" && (
+              <div>
+                <label style={{ display: "block", fontSize: 11, fontWeight: 600, color: "#6B6157", letterSpacing: "0.1em", textTransform: "uppercase", marginBottom: 8 }}>
+                  Anthropic API Key
+                </label>
+                <input className="key-input" type="password" placeholder="sk-ant-api03-..."
+                  value={key} onChange={(e) => setKey(e.target.value)}
+                  onKeyDown={(e) => e.key === "Enter" && save()} autoFocus />
+                <p style={{ fontSize: 11, color: "#6B6157", marginTop: 10, lineHeight: 1.7 }}>
+                  Stored in your browser's local storage. Sent only to Anthropic's API.
+                  {key && <span style={{ color: "#2D7A4F" }}> ✓ Key is set.</span>}
+                </p>
+              </div>
+            )}
+
+            {tab === "help" && (
+              <div style={{ fontSize: 12, color: "#1C1815", lineHeight: 1.85 }}>
+                <ol style={{ paddingLeft: 18, margin: 0 }}>
+                  <li>Go to <strong>console.anthropic.com</strong></li>
+                  <li>Sign up or log in (free)</li>
+                  <li>Click <strong>API Keys</strong> in the sidebar</li>
+                  <li>Click <strong>Create Key</strong> → copy it</li>
+                  <li>Paste it in the API Key tab and save</li>
+                </ol>
+                <p style={{ marginTop: 12, fontSize: 11, color: "#6B6157" }}>
+                  Each set of 30 sentences costs roughly $0.01–0.02 USD.
+                </p>
+              </div>
+            )}
+          </div>
+
+          <div className="modal-footer">
+            <button className="btn-primary"
+              style={{ padding: "8px 18px", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600 }}
+              onClick={save}>{saved ? "Saved ✓" : "Save key"}</button>
+            {key && <button className="btn-sm" onClick={() => { setKey(""); saveKey(""); }}>Clear</button>}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Export modal ───────────────────────────────────────────────────────
+  function ExportModal({ sets, onClose }) {
+    const [copied, setCopied] = useState(false);
+    const textareaRef = useRef(null);
+    const json = JSON.stringify(sets, null, 2);
+
+    const copy = () => {
+      if (navigator.clipboard) {
+        navigator.clipboard.writeText(json).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2200); });
+      } else {
+        textareaRef.current?.select();
+        document.execCommand("copy");
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2200);
+      }
+    };
+
+    return (
+      <div className="modal-overlay" onClick={(e) => e.target === e.currentTarget && onClose()}>
+        <div className="modal-box" style={{ maxWidth: 560 }}>
+          <div className="modal-header">
+            <div>
+              <div style={{ fontSize: 13, fontWeight: 700, color: "#1C1815" }}>Export sentences</div>
+              <div style={{ fontSize: 11, color: "#6B6157", marginTop: 3 }}>
+                {sets.length} set{sets.length !== 1 ? "s" : ""} · {sets.flat().length} sentences
+              </div>
+            </div>
+            <button className="icon-btn" style={{ color: "#6B6157" }} onClick={onClose}><Ico.Close /></button>
+          </div>
+
+          <div className="modal-body">
+            <button className="btn-primary"
+              style={{ padding: "11px 20px", fontSize: 12, letterSpacing: "0.12em", textTransform: "uppercase", fontWeight: 600, width: "100%", justifyContent: "center" }}
+              onClick={() => downloadJSON(sets)}>
+              <Ico.Download /> Download deutsch32.json
+            </button>
+
+            <div className="divider">
+              <div className="divider-line" />
+              <span className="divider-text">or copy the JSON manually</span>
+              <div className="divider-line" />
+            </div>
+
+            <textarea ref={textareaRef} readOnly className="json-area" value={json}
+              onFocus={(e) => e.target.select()} onClick={(e) => e.target.select()} />
+          </div>
+
+          <div className="modal-footer">
+            <button className="btn-sm" style={{ padding: "7px 14px" }} onClick={copy}>
+              <Ico.Copy /> {copied ? "Copied ✓" : "Copy JSON"}
+            </button>
+            <span style={{ fontSize: 11, color: "#6B6157" }}>Paste into TextEdit → save as .json</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main App ───────────────────────────────────────────────────────────
+  function App() {
+    const [apiKey, setApiKey]             = useState(getKey);
+    const [sets, setSets]                 = useState(loadSets);  // restore from localStorage
+    const [activeSet, setActiveSet]       = useState(0);
+    const [cardIndex, setCardIndex]       = useState(0);
+    const [revealed, setRevealed]         = useState(false);
+    const [generating, setGenerating]     = useState(false);
+    const [error, setError]               = useState(null);
+    const [importMsg, setImportMsg]       = useState(null);
+    const [showSettings, setShowSettings] = useState(false);
+    const [showExport, setShowExport]     = useState(false);
+    const importRef = useRef(null);
+
+    // Auto-save sets to localStorage whenever they change
+    useEffect(() => { saveSets(sets); }, [sets]);
+
+    // Auto-save sets to localStorage whenever they change
+    useEffect(() => { saveSets(sets); }, [sets]);
+
+    const allSentences = sets.flat();
+    const currentSet   = sets[activeSet] || [];
+    const current      = currentSet[cardIndex] || null;
+    const total        = currentSet.length;
+    const hasKey       = !!apiKey;
+
+    const switchSet = useCallback((idx) => {
+      window.speechSynthesis?.cancel();
+      setActiveSet(idx); setCardIndex(0); setRevealed(false);
+    }, []);
+
+    const shuffleCurrentSet = useCallback(() => {
+      window.speechSynthesis?.cancel();
+      setSets((prev) => {
+        const next = prev.map((set, i) => {
+          if (i !== activeSet) return set;
+          const shuffled = [...set];
+          for (let j = shuffled.length - 1; j > 0; j--) {
+            const k = Math.floor(Math.random() * (j + 1));
+            [shuffled[j], shuffled[k]] = [shuffled[k], shuffled[j]];
+          }
+          return shuffled;
+        });
+        return next;
+      });
+      setCardIndex(0);
+      setRevealed(false);
+    }, [activeSet]);
+
+    const generate = useCallback(async () => {
+      if (generating || !hasKey) return;
+      setGenerating(true); setError(null); setImportMsg(null);
+      try {
+        const newSet = await generateSet(apiKey, allSentences);
+        setSets((prev) => {
+          const next = [...prev, newSet];
+          setActiveSet(next.length - 1); setCardIndex(0); setRevealed(false);
+          return next;
+        });
+      } catch (e) {
+        setError(e.message || "Generation failed. Check your API key and connection.");
+      } finally { setGenerating(false); }
+    }, [generating, hasKey, apiKey, allSentences]);
+
+    const handleImportClick = () => { setError(null); setImportMsg(null); importRef.current?.click(); };
+
+    const handleFileChange = (e) => {
+      const file = e.target.files?.[0]; if (!file) return; e.target.value = "";
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        try {
+          const raw = JSON.parse(ev.target.result);
+          const imported = parseSetsFromJSON(raw);
+          setSets(imported); setActiveSet(0); setCardIndex(0); setRevealed(false); setError(null);
+          setImportMsg(`Imported ${imported.length} set${imported.length !== 1 ? "s" : ""} · ${imported.flat().length} sentences`);
+        } catch (err) { setError("Import failed: " + err.message); }
+      };
+      reader.readAsText(file);
+    };
+
+    const goNext = useCallback(() => {
+      window.speechSynthesis?.cancel();
+      setCardIndex((i) => Math.min(i + 1, total - 1)); setRevealed(false);
+    }, [total]);
+
+    const goPrev = useCallback(() => {
+      window.speechSynthesis?.cancel();
+      setCardIndex((i) => Math.max(i - 1, 0)); setRevealed(false);
+    }, []);
+
+    const reveal = useCallback(() => {
+      if (revealed || !current) return;
+      setRevealed(true); speakGerman(current.german);
+    }, [revealed, current]);
+
+    useEffect(() => {
+      const handler = (e) => {
+        if (showSettings || showExport) { if (e.key === "Escape") { setShowSettings(false); setShowExport(false); } return; }
+        const tag = e.target?.tagName || "";
+        if (tag === "INPUT" || tag === "TEXTAREA") return;
+        if (e.code === "Space")                             { e.preventDefault(); revealed ? goNext() : reveal(); }
+        else if (e.key === "ArrowRight" || e.key === "Enter") { e.preventDefault(); goNext(); }
+        else if (e.key === "ArrowLeft")                     { e.preventDefault(); goPrev(); }
+        else if (e.key === "r" || e.key === "R")            { revealed && current ? speakGerman(current.german) : reveal(); }
+      };
+      window.addEventListener("keydown", handler);
+      return () => window.removeEventListener("keydown", handler);
+    }, [revealed, goNext, goPrev, reveal, current, showSettings, showExport]);
+
+    const isEmpty = sets.length === 0;
+
+    return (
+      <div style={{
+        minHeight: "100vh", width: "100%", display: "flex", flexDirection: "column",
+        backgroundColor: "#EFE7D4", color: "#1C1815",
+        fontFamily: '"Manrope", ui-sans-serif, system-ui, sans-serif',
+        backgroundImage: "radial-gradient(ellipse 80% 50% at 50% -10%, rgba(178,58,47,0.06), transparent 60%)",
+      }}>
+        {showSettings && <SettingsModal onClose={() => setShowSettings(false)} onSaved={(k) => setApiKey(k)} />}
+        {showExport && sets.length > 0 && <ExportModal sets={sets} onClose={() => setShowExport(false)} />}
+        <input ref={importRef} type="file" accept=".json,application/json" style={{ display: "none" }} onChange={handleFileChange} />
+
+        {/* Header */}
+        <header style={{ padding: "15px 24px 12px", borderBottom: "1px solid rgba(28,24,21,0.08)" }} className="fadein">
+          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", marginBottom: sets.length > 0 ? 11 : 0 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+              <div style={{ width: 8, height: 8, borderRadius: "50%", backgroundColor: "#B23A2F", flexShrink: 0 }} />
+              <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.24em", color: "#6B6157" }}>Deutsch · 32</span>
+            </div>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+              <button className="btn-sm" onClick={() => setShowSettings(true)}><Ico.Key /> API Key</button>
+              <button className="btn-sm" onClick={handleImportClick}><Ico.Upload /> Import</button>
+              {sets.length > 0 && (
+                <button className="btn-sm" title="Clear all sets from memory"
+                  onClick={() => { if (window.confirm("Clear all sets? This cannot be undone.")) { clearSavedSets(); setSets([]); setActiveSet(0); setCardIndex(0); setRevealed(false); } }}>
+                  Clear all
+                </button>
+              )}
+              {sets.length > 0 && <button className="btn-sm" onClick={() => setShowExport(true)}><Ico.Download /> Export</button>}
+              {sets.length > 0 && (
+                <button className="btn-sm" onClick={shuffleCurrentSet} title="Shuffle order of current set">
+                  <Ico.Shuffle /> Shuffle
+                </button>
+              )}
+              <button className="btn-primary"
+                style={{ padding: "7px 14px", fontSize: 11, letterSpacing: "0.16em", textTransform: "uppercase", fontWeight: 600 }}
+                onClick={hasKey ? generate : () => setShowSettings(true)} disabled={generating}>
+                <Ico.Refresh spin={generating} />
+                {generating ? <span className="generating-dots">Generating</span>
+                  : !hasKey ? "Set API Key"
+                  : sets.length === 0 ? "Generate Set 1"
+                  : `Generate Set ${sets.length + 1}`}
+              </button>
+            </div>
+          </div>
+
+          {importMsg && <p style={{ fontSize: 11, color: "#2D7A4F", fontWeight: 500, margin: "0 0 8px" }}>✓ {importMsg}</p>}
+          {error     && <p style={{ fontSize: 12, color: "#B23A2F", margin: "0 0 8px" }}>{error}</p>}
+
+          {sets.length > 0 && (
+            <div style={{ display: "flex", gap: 4, overflowX: "auto", scrollbarWidth: "none" }}>
+              {sets.map((_, i) => (
+                <button key={i} className={`set-tab ${activeSet === i ? "active" : ""}`} onClick={() => switchSet(i)}>
+                  Set {i + 1}
+                </button>
+              ))}
+            </div>
+          )}
+        </header>
+
+        {/* Main */}
+        <main style={{ flex: 1, display: "flex", alignItems: "center", justifyContent: "center", padding: "40px 28px" }}>
+
+          {isEmpty && (
+            <div className="fadein" style={{ textAlign: "center", maxWidth: 420 }}>
+              <div className="serif" style={{ fontSize: "clamp(56px,12vw,88px)", color: "#1C1815", fontStyle: "italic", opacity: 0.1, lineHeight: 1, marginBottom: 24 }}>D</div>
+              <p className="serif" style={{ fontSize: "clamp(22px,4vw,30px)", color: "#1C1815", marginBottom: 12 }}>Bereit zum Üben?</p>
+              <p style={{ fontSize: 14, color: "#6B6157", lineHeight: 1.8, marginBottom: 32 }}>
+                {hasKey
+                  ? <>Generate a fresh set of 30 sentences,<br />or import a previously saved file.</>
+                  : <>Set your API key to get started,<br />or import a previously saved file.</>}
+              </p>
+              <div style={{ display: "flex", alignItems: "center", justifyContent: "center", gap: 10, flexWrap: "wrap" }}>
+                {hasKey ? (
+                  <button className="btn-primary"
+                    style={{ padding: "12px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                    onClick={generate} disabled={generating}>
+                    <Ico.Refresh spin={generating} />
+                    {generating ? <span className="generating-dots">Generating</span> : "Generate Set 1"}
+                  </button>
+                ) : (
+                  <button className="btn-primary"
+                    style={{ padding: "12px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                    onClick={() => setShowSettings(true)}>
+                    <Ico.Key /> Set API Key
+                  </button>
+                )}
+                <button className="btn-sm" style={{ padding: "10px 18px" }} onClick={handleImportClick}>
+                  <Ico.Upload /> Import file
+                </button>
+              </div>
+            </div>
+          )}
+
+          {!isEmpty && current && (
+            <div style={{ width: "100%", maxWidth: 640 }} key={`${activeSet}-${cardIndex}`}>
+              <div className="progress-bar fadein" style={{ marginBottom: 28 }}>
+                <div className="progress-fill" style={{ width: `${((cardIndex + 1) / total) * 100}%` }} />
+              </div>
+
+              <div className="rise" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 20 }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+                  <div style={{ width: 24, height: 1, background: "#1C1815", opacity: 0.35, flexShrink: 0 }} />
+                  <span style={{ fontSize: 11, textTransform: "uppercase", letterSpacing: "0.26em", color: "#6B6157" }}>
+                    {current.focus || "Übung"}
+                  </span>
+                </div>
+                <span className="num" style={{ fontSize: 11, fontWeight: 500, color: "#6B6157" }}>
+                  {cardIndex + 1} <span style={{ opacity: 0.4 }}>/ {total}</span>
+                </span>
+              </div>
+
+              <h1 className="serif rise" style={{
+                fontSize: "clamp(28px,5.5vw,52px)", lineHeight: 1.1,
+                fontWeight: 500, letterSpacing: "-0.015em", color: "#1C1815", margin: 0,
+              }}>
+                {current.english}
+              </h1>
+
+              <div className="drawline" style={{ height: 1, width: 80, background: "#1C1815", opacity: 0.2, margin: "32px 0" }} />
+
+              {revealed ? (
+                <div className="rise">
+                  <div style={{ display: "flex", alignItems: "flex-start", gap: 16 }}>
+                    <p className="serif" style={{
+                      fontSize: "clamp(22px,4.5vw,44px)", lineHeight: 1.2, fontStyle: "italic",
+                      letterSpacing: "-0.01em", color: "#B23A2F", flex: 1, margin: 0,
+                    }}>
+                      {current.german}
+                    </p>
+                    <button className="icon-btn" style={{ color: "#B23A2F", marginTop: 4, flexShrink: 0 }}
+                      onClick={() => speakGerman(current.german)} title="Hear it (R)">
+                      <Ico.Volume />
+                    </button>
+                  </div>
+
+                  <div style={{ marginTop: 36, display: "flex", alignItems: "center", gap: 12, flexWrap: "wrap" }}>
+                    <button className="btn-ghost" disabled={cardIndex === 0}
+                      style={{ fontSize: 12, textTransform: "uppercase", letterSpacing: "0.16em", fontWeight: 600,
+                        borderBottom: "1px solid rgba(28,24,21,0.25)", color: "#6B6157", paddingBottom: 2 }}
+                      onClick={goPrev}>← Prev</button>
+
+                    {cardIndex < total - 1 ? (
+                      <button className="btn-primary"
+                        style={{ padding: "10px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                        onClick={goNext} autoFocus>Next →</button>
+                    ) : (
+                      <button className="btn-primary" disabled={generating}
+                        style={{ padding: "10px 24px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                        onClick={generate} autoFocus>
+                        <Ico.Refresh spin={generating} />
+                        {generating ? <span className="generating-dots">Generating</span> : `Generate Set ${sets.length + 1}`}
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ) : (
+                <div className="rise">
+                  <button className="btn-primary"
+                    style={{ padding: "12px 28px", fontSize: 13, letterSpacing: "0.18em", textTransform: "uppercase", fontWeight: 600 }}
+                    onClick={reveal} autoFocus>Show Answer</button>
+                  <p className="serif" style={{ fontSize: 14, fontStyle: "italic", color: "#6B6157", marginTop: 20 }}>
+                    Say it aloud first, then reveal.
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </main>
+
+        {/* Footer */}
+        {!isEmpty && (
+          <footer className="fadein" style={{ padding: "8px 24px 20px" }}>
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12, flexWrap: "wrap", fontSize: 11, color: "#6B6157" }}>
+              <div style={{ display: "flex", alignItems: "center", gap: 16, flexWrap: "wrap" }}>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>Space</kbd> reveal / next</span>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>R</kbd> hear it</span>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>← →</kbd> navigate</span>
+                <span style={{ display:"flex", alignItems:"center", gap: 5 }}><kbd>Esc</kbd> close panel</span>
+              </div>
+              <span className="num" style={{ opacity: 0.5, textTransform: "uppercase", letterSpacing: "0.18em" }}>
+                {sets.length} set{sets.length !== 1 ? "s" : ""} · {allSentences.length} sentences · auto-saved
+              </span>
+            </div>
+          </footer>
+        )}
+      </div>
+    );
+  }
+
+  ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+</script>
+</body>
+</html>
